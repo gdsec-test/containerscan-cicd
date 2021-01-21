@@ -134,23 +134,6 @@ func runScan2(url string, token string, container string) {
 	fmt.Println("Result: " + out.String())
 }
 
-func runScan(url string, token string, container string) {
-
-	// cmd := exec.Command("/bin/sh", "-c", "sudo find ...")
-
-	// out, err := exec.Command("/bin/sh", "-c", "./twistcli images scan --details --address "+url+"  -u "+accesskey+" -p "+secretkey+" --ci containerscan:latest").Output()
-	out, err := exec.Command("/bin/sh", "-c", "./twistcli images scan --details --address "+url+"  --token "+token+" --ci "+container).Output()
-
-	if err != nil {
-		println("error execute cli")
-		println(err.Error())
-	} else {
-		stringout := string(out)
-		// stringout = stringout[:strings.Index(stringout, "=====DATA[{")]
-		println(stringout)
-	}
-
-}
 func main() {
 	arg := os.Args
 	// colorReset := "\033[0m"
