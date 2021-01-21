@@ -1,0 +1,38 @@
+on: [push, pull_request]
+
+name: scan container images
+env:
+  TL_USER: ${{ secrets.TL_USER }}
+  TL_PASS: ${{ secrets.TL_PASS }}
+    
+  CONTAINER_IMAGE: prismatest
+  CONTAINER_IMAGE_TWISTCLI: containerscan
+
+jobs:
+  build-and-scan:
+    name: Build and Scan for Vulnerabilities
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Build and tag the image
+      run: docker build -t $CONTAINER_IMAGE .
+
+    - name: Build and tag the image twistcli
+      run: docker build -t $CONTAINER_IMAGE_TWISTCLI ./twistlockdocker
+         
+    - name: Scan the image
+      env:
+        TL_USER: ${{ secrets.PRISMA_ACCESSKEY }}
+        TL_PASS: ${{ secrets.PRISMA_SECRET_ID }}
+      run: |
+        docker run -v /var/run/docker.sock:/var/run/docker.sock -e AK=${TL_USER} -e SI=${TL_PASS} -e CONTAINER=${CONTAINER_IMAGE} -a stdin -a stdout -a stderr $CONTAINER_IMAGE_TWISTCLI  &&
+        
+        docker run -v /var/run/docker.sock:/var/run/docker.sock -e AK=${TL_USER} -e SI=${TL_PASS} -e CONTAINER=${CONTAINER_IMAGE_TWISTCLI} -a stdin -a stdout -a stderr $CONTAINER_IMAGE_TWISTCLI
+
+       
+       
+       
+       
