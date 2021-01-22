@@ -2,67 +2,15 @@ package main
 
 import (
 	"bytes"
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
 )
 
-func csvReader(file string) *csv.Reader {
-	// 1. Open the file
-	recordFile, err := os.Open(file)
-	if err != nil {
-		fmt.Println("An error encountered ::", err)
-	}
-	// 2. Initialize the reader
-	reader := csv.NewReader(recordFile)
-	return reader
-	// 3. Read all the records
-	// records, _ := reader.ReadAll()
-	// // 4. Iterate through the records as you wish
-	// fmt.Println(records)
-}
-
-func get_access_keys(key_file string) (string, string) {
-
-	absPath, _ := filepath.Abs(key_file)
-	println(absPath)
-	reader := csvReader(absPath)
-	result := make(map[string]string)
-
-	for {
-
-		row, err := reader.Read()
-		// fmt.Printf("%s\n", row)
-		if err == io.EOF {
-			break
-		}
-
-		// for value := range row {
-		key := strings.TrimSpace(row[0])
-		// if _, ok := result[key]; ok {
-		// continue
-		// }
-
-		result[key] = strings.TrimSpace(row[1])
-
-		// fmt.Printf(row[0], "::", row[1])
-		// }
-
-	}
-	// fmt.Print(result)
-	// fmt.Printf(result["Secret Key"])
-	return result["Access Key ID"], result["Secret Key"]
-
-}
-
-func getAuthToken(CONSOLEURI string, username string, password string) Token {
+func getAuthToken(CONSOLEURI string, username string, password string) token {
 
 	url := CONSOLEURI + "/api/v1/authenticate"
 
@@ -74,7 +22,11 @@ func getAuthToken(CONSOLEURI string, username string, password string) Token {
 	client := &http.Client{}
 	req, _ := http.NewRequest("POST", url, bytes.NewReader(postBody))
 	req.Header.Add("content-type", "application/json")
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		println(err.Error()) // handle error
+	}
 	defer resp.Body.Close()
 
 	// r = requests.post(
@@ -82,36 +34,31 @@ func getAuthToken(CONSOLEURI string, username string, password string) Token {
 	// token = r.json()["token"]
 	body, _ := ioutil.ReadAll(resp.Body)
 	tokenjson := string(body)
-	var token Token
+	var token token
 	json.Unmarshal([]byte(tokenjson), &token)
 	return token
 }
 
-type Token struct {
+type token struct {
 	Token string
 }
 
-func get_response(url string, auth_token string) []byte {
-
-	// b := BackOff.NewExponentialBackOff()
-	// b.MaxElapsedTime = 3 * time.Minute
-
-	// err = BackOff.Retry(doSomething(), b)
-	// if err != nil {
-	// log.Fatalf("error after retrying: %v", err)
-	// }
+func getAPIResponse(url string, authToken string) []byte {
 
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("Authorization", "Bearer "+auth_token)
-	resp, _ := client.Do(req)
+	req.Header.Add("Authorization", "Bearer "+authToken)
+	resp, err := client.Do(req)
+	if err != nil {
+		println(err.Error()) // handle error
+	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	return body
 }
 
-func downloadCli(CONSOLEURI string, token string) {
-	twistcli := get_response(CONSOLEURI+"/api/v1/util/twistcli", token)
+func downloadTwistCli(CONSOLEURI string, token string) {
+	twistcli := getAPIResponse(CONSOLEURI+"/api/v1/util/twistcli", token)
 
 	err := ioutil.WriteFile("twistcli", twistcli, 0755)
 	if err != nil {
@@ -119,7 +66,7 @@ func downloadCli(CONSOLEURI string, token string) {
 	}
 }
 
-func runScan2(url string, token string, container string) {
+func runTwistCli(url string, token string, container string) {
 	colorRed := "\033[31m"
 	cmd := exec.Command("/bin/sh", "-c", "./twistcli images scan --address "+url+"  --token "+token+" --ci "+container)
 	var out bytes.Buffer
@@ -154,9 +101,9 @@ func main() {
 	container := arg[3]
 	token := getAuthToken(CONSOLEURI, accesskey, secretid)
 
-	downloadCli(CONSOLEURI, token.Token)
+	downloadTwistCli(CONSOLEURI, token.Token)
 
-	runScan2(CONSOLEURI, token.Token, container)
+	runTwistCli(CONSOLEURI, token.Token, container)
 	// none-zero status, fails step
 	// os.Exit(3)
 }
