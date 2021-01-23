@@ -1,6 +1,7 @@
-FROM golang:1.12.0-alpine3.9
+FROM golang:alpine
 
 # FROM golang:alpine
+RUN apk add git
 
 RUN rm /usr/local/go/src/crypto/tls/testdata/example-key.pem
 

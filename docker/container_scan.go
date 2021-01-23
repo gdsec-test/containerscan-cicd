@@ -8,6 +8,10 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
+	"time"
+
+	"github.com/cenkalti/backoff/v4"
 )
 
 func getAuthToken(CONSOLEURI string, username string, password string) token {
@@ -44,16 +48,34 @@ type token struct {
 }
 
 func getAPIResponse(url string, authToken string) []byte {
+	var body []byte
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = 2 * time.Minute
 
 	client := &http.Client{}
+	var resp *http.Response
+	var err error
+	var apierror error
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", "Bearer "+authToken)
-	resp, err := client.Do(req)
+
+	err = backoff.Retry(func() error {
+		resp, apierror = client.Do(req)
+		if apierror != nil {
+			return apierror
+		}
+		defer resp.Body.Close()
+		apibody, readerror := ioutil.ReadAll(resp.Body)
+		if apierror != nil {
+			return readerror
+		}
+		body = apibody
+		return nil
+	}, bo)
+
 	if err != nil {
 		println(err.Error()) // handle error
 	}
-	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
 	return body
 }
 
@@ -78,10 +100,15 @@ func runTwistCli(url string, token string, container string) {
 		fmt.Println(string(colorRed), fmt.Sprint(err)+": "+stderr.String())
 		return
 	}
-	fmt.Println("Result: " + out.String())
+
+	resultstring := out.String()
+	resultstring = resultstring[:strings.Index(resultstring, "=====DATA[{")]
+
+	fmt.Println("Result: " + resultstring)
 }
 
 func main() {
+
 	arg := os.Args
 	// colorReset := "\033[0m"
 
@@ -93,7 +120,7 @@ func main() {
 	// colorCyan := "\033[36m"
 	// colorWhite := "\033[37m"
 
-	fmt.Println(string(colorGreen), "Run GOLANG")
+	fmt.Println(string(colorGreen), "Run....")
 
 	CONSOLEURI := "https://us-east1.cloud.twistlock.com/us-2-158254964"
 	accesskey := arg[1]
