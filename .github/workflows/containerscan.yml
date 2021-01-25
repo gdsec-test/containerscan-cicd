@@ -5,7 +5,7 @@ env:
   TL_USER: ${{ secrets.TL_USER }}
   TL_PASS: ${{ secrets.TL_PASS }}
     
-  CONTAINER_IMAGE: prismatest
+  CONTAINER_IMAGE: badcontainer
   CONTAINER_IMAGE_TWISTCLI: containerscan
 
 jobs:
@@ -22,15 +22,18 @@ jobs:
 
     - name: Build and tag the image twistcli
       run: docker build -t $CONTAINER_IMAGE_TWISTCLI ./docker
-         
+    
+    - name: Build bad container
+      run: docker build -t $CONTAINER_IMAGE ./test
+
     - name: Scan the image
       env:
         TL_USER: ${{ secrets.PRISMA_ACCESSKEY }}
         TL_PASS: ${{ secrets.PRISMA_SECRET_ID }}
       run: |
-        # docker run -v /var/run/docker.sock:/var/run/docker.sock:ro  -e AK=${TL_USER} -e SI=${TL_PASS} -e CONTAINER=${CONTAINER_IMAGE} -a stdin -a stdout -a stderr $CONTAINER_IMAGE_TWISTCLI  &&
+        docker run -v /var/run/docker.sock:/var/run/docker.sock:ro  -e AK=${TL_USER} -e SI=${TL_PASS} -e CONTAINER=${CONTAINER_IMAGE} $CONTAINER_IMAGE_TWISTCLI  &&
         
-        docker run -v /var/run/docker.sock:/var/run/docker.sock:ro  -e AK=${TL_USER} -e SI=${TL_PASS} -e CONTAINER=${CONTAINER_IMAGE_TWISTCLI} -a stdin -a stdout -a stderr $CONTAINER_IMAGE_TWISTCLI
+        docker run -v /var/run/docker.sock:/var/run/docker.sock:ro  -e AK=${TL_USER} -e SI=${TL_PASS} -e CONTAINER=${CONTAINER_IMAGE} $CONTAINER_IMAGE_TWISTCLI
 
        
        
