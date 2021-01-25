@@ -13,7 +13,7 @@ import (
 )
 
 // GetSecret retrieve aws secretmanager secret
-func GetSecret(secretname string, region string, credentials *credentials.Credentials) (*secretsmanager.GetSecretValueOutput, error) {
+func getSecret(secretname string, region string, credentials *credentials.Credentials) (*secretsmanager.GetSecretValueOutput, error) {
 
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region:      aws.String(region),
@@ -59,7 +59,7 @@ func GetSecret(secretname string, region string, credentials *credentials.Creden
 }
 
 //RetrieveS3File retrieve s3 file
-func RetrieveS3File(key string, bucket string, region string, destPath string, credentials *credentials.Credentials) ([]byte, error) {
+func retrieveS3File(key string, bucket string, region string, destPath string, credentials *credentials.Credentials) ([]byte, error) {
 	sess, err := session.NewSession(
 		&aws.Config{
 			Region:      aws.String(region),
@@ -83,7 +83,7 @@ func RetrieveS3File(key string, bucket string, region string, destPath string, c
 }
 
 //AssumeRole Assume aws role
-func AssumeRole(roleToAssumeArn string, region string) (*sts.Credentials, error) {
+func assumeRole(roleToAssumeArn string, region string) (*sts.Credentials, error) {
 
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region),

@@ -14,6 +14,10 @@ import (
 	"github.com/cenkalti/backoff/v4"
 )
 
+type token struct {
+	Token string
+}
+
 func getAuthToken(CONSOLEURI string, username string, password string) token {
 
 	url := CONSOLEURI + "/api/v1/authenticate"
@@ -41,10 +45,6 @@ func getAuthToken(CONSOLEURI string, username string, password string) token {
 	var token token
 	json.Unmarshal([]byte(tokenjson), &token)
 	return token
-}
-
-type token struct {
-	Token string
 }
 
 func getAPIResponse(url string, authToken string) []byte {
@@ -84,13 +84,14 @@ func downloadTwistCli(CONSOLEURI string, token string) {
 
 	err := ioutil.WriteFile("twistcli", twistcli, 0755)
 	if err != nil {
+		println("error saving twistcli")
 		println(err.Error()) // handle error
 	}
 }
 
 func runTwistCli(url string, token string, container string) {
 	colorRed := "\033[31m"
-	cmd := exec.Command("/bin/sh", "-c", "./twistcli images scan --address "+url+"  --token "+token+" --ci "+container)
+	cmd := exec.Command("/bin/sh", "-c", "./twistcli images scan --details --address "+url+"  --token "+token+" --ci "+container)
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
