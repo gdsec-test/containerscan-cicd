@@ -31,10 +31,8 @@ jobs:
         TL_USER: ${{ secrets.PRISMA_ACCESSKEY }}
         TL_PASS: ${{ secrets.PRISMA_SECRET_ID }}
       run: |
-        # docker run -v /var/run/docker.sock:/var/run/docker.sock:ro  -e AK=${TL_USER} -e SI=${TL_PASS} -e CONTAINER=${CONTAINER_IMAGE} $CONTAINER_IMAGE_TWISTCLI  &&
-        
         docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro  -e AK=${TL_USER} -e SI=${TL_PASS} -e CONTAINER=${CONTAINER_IMAGE} $CONTAINER_IMAGE_TWISTCLI
-       
+      
        
        
        
