@@ -1,112 +1,82 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
-
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go/service/ssm"
+	"io/ioutil"
+	"net/http"
+	"time"
 )
 
 // GetSecret retrieve aws secretmanager secret
-func getSecret(secretname string, region string, credentials *credentials.Credentials) (*secretsmanager.GetSecretValueOutput, error) {
+func getSecret(secretname string, region string) *string {
 
-	sess := session.Must(session.NewSession(&aws.Config{
-		Region:      aws.String(region),
-		Credentials: credentials,
-	}))
+	sess := getAWSSession()
+	svc := secretsmanager.New(sess, aws.NewConfig().WithRegion(region))
 
-	svc := secretsmanager.New(sess)
 	input := &secretsmanager.GetSecretValueInput{
 		SecretId: aws.String(secretname),
 	}
 
 	result, err := svc.GetSecretValue(input)
 	if err != nil {
-		/*
-			 To address specific error, you can import this package:
-				"github.com/aws/aws-sdk-go/aws/awserr"
-			and use this example:
-			if aerr, ok := err.(awserr.Error); ok {
-				switch aerr.Code() {
-				case secretsmanager.ErrCodeResourceNotFoundException:
-					fmt.Println(secretsmanager.ErrCodeResourceNotFoundException, aerr.Error())
-				case secretsmanager.ErrCodeInvalidParameterException:
-					fmt.Println(secretsmanager.ErrCodeInvalidParameterException, aerr.Error())
-				case secretsmanager.ErrCodeInvalidRequestException:
-					fmt.Println(secretsmanager.ErrCodeInvalidRequestException, aerr.Error())
-				case secretsmanager.ErrCodeDecryptionFailure:
-					fmt.Println(secretsmanager.ErrCodeDecryptionFailure, aerr.Error())
-				case secretsmanager.ErrCodeInternalServiceError:
-					fmt.Println(secretsmanager.ErrCodeInternalServiceError, aerr.Error())
-				default:
-					fmt.Println(aerr.Error())
-				}
-			} else {
-				// Print the error, cast err to awserr.Error to get the Code and
-				// Message from an error.
-				fmt.Println(err.Error())
-			}
-			return nil, err
-		*/
+		panic(err)
+
 	}
 
-	return result, nil
+	return result.SecretString
 }
 
-//RetrieveS3File retrieve s3 file
-func retrieveS3File(key string, bucket string, region string, destPath string, credentials *credentials.Credentials) ([]byte, error) {
-	sess, err := session.NewSession(
-		&aws.Config{
-			Region:      aws.String(region),
-			Credentials: credentials,
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-	svc := s3.New(sess)
-	params := &s3.GetObjectInput{Bucket: aws.String(bucket), Key: aws.String(key)}
-	res, err := svc.GetObject(params)
-	if err != nil {
-		return nil, err
-	}
+func callExecuteAPI(url string, region string) ([]byte, error) {
 
-	defer res.Body.Close()
+	sess := getAWSSession()
+	client := new(http.Client)
+	req, _ := http.NewRequest("GET", url, nil)
 
-	return ioutil.ReadAll(res.Body)
+	signer := v4.NewSigner(sess.Config.Credentials)
+	signer.Sign(req, nil, "execute-api", region, time.Now())
+	resp, error := client.Do(req)
+	if error != nil {
+		return nil, error
+	}
+	b, error := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	return b, error
 
 }
 
-//AssumeRole Assume aws role
-func assumeRole(roleToAssumeArn string, region string) (*sts.Credentials, error) {
+func getSSMParameter(name string) string {
 
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(region),
+	sess := getAWSSession()
+
+	ssmsvc := ssm.New(sess, aws.NewConfig())
+	param, err := ssmsvc.GetParameter(&ssm.GetParameterInput{
+		Name:           aws.String(name),
+		WithDecryption: aws.Bool(false),
 	})
 
 	if err != nil {
-		fmt.Println("NewSession Error", err)
-		return nil, err
+		panic(err)
 	}
 
-	// Create a STS client
-	svc := sts.New(sess)
+	value := *param.Parameter.Value
+	return value
+}
 
-	sessionName := "containerscanci"
-	result, err := svc.AssumeRole(&sts.AssumeRoleInput{
-		RoleArn:         &roleToAssumeArn,
-		RoleSessionName: &sessionName,
-	})
+func getAWSSession() *session.Session {
 
-	if err != nil {
-		fmt.Println("AssumeRole Error", err)
-		return nil, err
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+	if sess == nil {
+		sess, _ := session.NewSessionWithOptions(session.Options{
+			Profile: "default",
+			Config:  aws.Config{Region: aws.String("us-east-1")},
+		})
+		return sess
 	}
-
-	return result.Credentials, nil
+	return sess
 }

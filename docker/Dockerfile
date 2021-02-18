@@ -24,7 +24,7 @@ RUN go build -o main .
 # RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 # USER appuser
 
-ENTRYPOINT /app/main $AK $SI $CONTAINER
+ENTRYPOINT /app/main $CONTAINER
 # CMD /app/main $AK $SI $CONTAINER
 
 

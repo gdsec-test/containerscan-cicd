@@ -26,7 +26,8 @@ var (
 	colorCyan   = "\033[36m"
 	colorWhite  = "\033[37m"
 
-	CONSOLEURI = "https://us-east1.cloud.twistlock.com/us-2-158254964"
+	prismaSecretName = "PrismaAccessKeys"
+	prismaConsoleURL = "https://us-east1.cloud.twistlock.com/us-2-158254964"
 
 	accesskey string
 	secretid  string
@@ -39,13 +40,14 @@ type token struct {
 
 func init() {
 	arg := os.Args
-	accesskey = arg[1]
-	secretid = arg[2]
-	container = arg[3]
+	container = arg[1]
+
 }
 
 func main() {
 	printWithColor(colorGreen, "Container Scanner Started\n")
+
+	accesskey, secretid := getPrismaSecret()
 
 	token := getAuthToken(accesskey, secretid)
 

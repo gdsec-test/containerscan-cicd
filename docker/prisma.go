@@ -31,7 +31,7 @@ func formatTwistlockResult(resultstring string) ScanResult {
 
 func getAuthToken(username string, password string) token {
 
-	url := CONSOLEURI + "/api/v1/authenticate"
+	url := prismaConsoleURL + "/api/v1/authenticate"
 
 	postBody, _ := json.Marshal(map[string]string{
 		"username": username,
@@ -92,7 +92,7 @@ func getAPIResponse(url string, authToken string) []byte {
 }
 
 func downloadTwistCli(token string) {
-	twistcli := getAPIResponse(CONSOLEURI+"/api/v1/util/twistcli", token)
+	twistcli := getAPIResponse(prismaConsoleURL+"/api/v1/util/twistcli", token)
 
 	err := ioutil.WriteFile("twistcli", twistcli, 0755)
 	if err != nil {
@@ -102,7 +102,7 @@ func downloadTwistCli(token string) {
 }
 
 func runTwistCli(token string, container string) string {
-	cmd := exec.Command("/bin/sh", "-c", "./twistcli images scan --details --address "+CONSOLEURI+" --token "+token+" --ci "+container)
+	cmd := exec.Command("/bin/sh", "-c", "./twistcli images scan --details --address "+prismaConsoleURL+" --token "+token+" --ci "+container)
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
@@ -114,4 +114,19 @@ func runTwistCli(token string, container string) string {
 	}
 
 	return out.String()
+}
+
+func getPrismaSecret() (string, string) {
+	prismasecret := getSecret(prismaSecretName, "us-east-1")
+
+	var p map[string]interface{}
+	err := json.Unmarshal([]byte(*prismasecret), &p)
+	if err != nil {
+		panic(err)
+	}
+
+	prismaAccessKeyID := p["prismaAccessKeyId"].(string)
+	prismaSecretKey := p["prismaSecretKey"].(string)
+
+	return prismaAccessKeyID, prismaSecretKey
 }
