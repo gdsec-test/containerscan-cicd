@@ -5,61 +5,82 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/coryb/sorty"
 	"github.com/olekukonko/tablewriter"
 )
 
 func (res ScanResult) reportToCLI() {
-	cFound := res.ComplianceIssues.reportToCLI()
+	cFound, cBlocking := res.ComplianceIssues.reportToCLI()
 	fmt.Println()
-	vFound := res.Vulnerabilities.reportToCLI()
+	vFound, vBlocking := res.Vulnerabilities.reportToCLI()
 
-	if cFound || vFound {
-		printWithColor(colorRed, "\nFAILED : Above issue(s) found with the Image.")
+	if cBlocking || vBlocking {
+		printWithColor(colorRed, "\nFAILED : Blocking issue(s) reported with the Image.")
 		os.Exit(1)
 	} else {
-		printWithColor(colorGreen, "\nSUCCESS : Could not find any issue(s) with the Image.")
+		if cFound || vFound {
+			printWithColor(colorYellow, "\nWARNING : Issue(s) reported with the Image.")
+		} else {
+			printWithColor(colorGreen, "\nSUCCESS : No issue(s) reported with the Image.")
+		}
 	}
 }
 
-func (comp ComplianceIssues) reportToCLI() bool {
+func (comp ComplianceIssues) reportToCLI() (bool, bool) {
 	if len(comp) == 0 {
-		return false
+		return false, false
 	}
 
 	printWithColor(colorRed, "Compliance Issues :")
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Severity", "Title", "Description", "Type"})
+	table.SetHeader([]string{"Id", "Severity", "Title", "SUPPRESS"})
 	table.SetRowLine(true)
 	table.SetRowSeparator("-")
-	table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold},
+	table.SetHeaderColor(
 		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold},
-		tablewriter.Colors{tablewriter.Bold})
-
+		tablewriter.Colors{tablewriter.Bold},
+		// tablewriter.Colors{tablewriter.Bold}
+	)
+	blocking := false
 	for _, c := range comp {
+		sup := ""
+		if c["SUPPRESS"] != nil {
+			sup = "SUPPRESS"
+		}
+		if c["block"] != nil {
+			blocking = true
+		}
 		table.Append([]string{
-			strconv.FormatFloat(c["id"].(float64), 'f', 0, 64),
+			c["cpl"].(string),
 			c["severity"].(string),
 			c["title"].(string),
-			c["description"].(string),
-			c["type"].(string),
+			// c["type"].(string),
+			sup,
 		})
 	}
 
 	table.Render()
 
-	return true
+	return true, blocking
 }
 
-func (vuln Vulnerabilities) reportToCLI() bool {
+func (vuln Vulnerabilities) reportToCLI() (bool, bool) {
 	if len(vuln) == 0 {
-		return false
+		return false, false
 	}
 
-	printWithColor(colorRed, "Vulnerability Issues :")
+	s := sorty.NewSorter().ByKeys([]string{
+		"-cvss",
+		"+packageName",
+	})
 
+	s.Sort(vuln)
+
+	printWithColor(colorRed, "Vulnerability Issues :")
+	blocking := false
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{
 		"CVE",
@@ -68,23 +89,32 @@ func (vuln Vulnerabilities) reportToCLI() bool {
 		"Status",
 		"Package Name",
 		"Package Version",
-		"Description",
-		"Type",
+		// "Description",
+		// "Type",
 		"Link",
+		"SUPPRESS",
 	})
 	table.SetRowLine(true)
 	table.SetRowSeparator("-")
-	table.SetHeaderColor(tablewriter.Colors{tablewriter.Bold},
+	table.SetHeaderColor(
 		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold},
+		// tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold})
 
 	for _, v := range vuln {
+		sup := ""
+		if v["SUPPRESS"] != nil {
+			sup = "SUPPRESS"
+		}
+		if v["block"] != nil {
+			blocking = true
+		}
 		table.Append([]string{
 			v["cve"].(string),
 			strconv.FormatFloat(v["cvss"].(float64), 'f', 2, 64),
@@ -92,15 +122,15 @@ func (vuln Vulnerabilities) reportToCLI() bool {
 			v["status"].(string),
 			v["packageName"].(string),
 			v["packageVersion"].(string),
-			v["description"].(string),
-			v["type"].(string),
+			// v["description"].(string),
 			"https://web.nvd.nist.gov/view/vuln/detail?vulnId=" + v["cve"].(string),
+			sup,
 		})
 	}
 
 	table.Render()
 
-	return true
+	return true, blocking
 }
 
 func printWithColor(color string, str ...interface{}) {

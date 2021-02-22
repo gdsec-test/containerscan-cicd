@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -29,9 +30,9 @@ var (
 	prismaSecretName = "PrismaAccessKeys"
 	prismaConsoleURL = "https://us-east1.cloud.twistlock.com/us-2-158254964"
 
-	accesskey string
-	secretid  string
-	container string
+	accesskey     string
+	secretid      string
+	containername string
 )
 
 type token struct {
@@ -40,7 +41,7 @@ type token struct {
 
 func init() {
 	arg := os.Args
-	container = arg[1]
+	containername = arg[1]
 
 }
 
@@ -53,10 +54,11 @@ func main() {
 
 	downloadTwistCli(token.Token)
 
-	resultstring := runTwistCli(token.Token, container)
+	resultstring := runTwistCli(token.Token, containername)
+	fmt.Println(resultstring)
+
 	scanResult := formatTwistlockResult(resultstring)
 
 	scanResult.normalize()
-
 	scanResult.reportToCLI()
 }
