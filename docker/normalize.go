@@ -41,24 +41,20 @@ func (exc *businessException) apply(finding map[string]interface{}) bool {
 			return false
 		}
 		value, ok := finding[strings.ToLower(attr)].(string)
-		fmt.Println("Pattern: fieldname %s\tValue: %v\n against %s", attr, pattern, value)
+		// fmt.Println("Pattern: fieldname %s\tValue: %v\n against %s", attr, pattern, value)
 
 		if ok {
 			matchResult, error := regexp.MatchString(pattern, value)
 			if error == nil {
 				if matchResult {
-					fmt.Println("matched")
 					matched = true
 				} else {
-					fmt.Println("unmatched")
 					return false
 				}
 			} else {
-				fmt.Println("regular exception error s%", error.Error())
 				return false
 			}
 		} else {
-			fmt.Println("Read attribute error")
 			return false
 		}
 	}
@@ -69,30 +65,22 @@ func (exc *businessException) apply(finding map[string]interface{}) bool {
 	return false
 }
 
-func getOverrides() []byte {
-	awsaccountid := getAwsAccount()
+func getOverridesFromAPI() []byte {
 
-	fmt.Printf("aws account: %s", awsaccountid)
-	hasher, _ := blake2b.New(20, nil)
-	hasher.Write([]byte(awsaccountid))
-	hashstring := hex.EncodeToString(hasher.Sum(nil)[:])
-	fmt.Print(hashstring)
+	org := getSSMParameter("/AdminParams/Team/OrgType")
 
-	// org := getSSMParameter("/AdminParams/Team/OrgType")
-	// appid := "5vhrlp0vbb"
-	// if org == "pci" {
-	// // appid = "5z4vnar9v4"
-	// // }
-	// // url := "https://" + appid + ".execute-api.us-west-2.amazonaws.com/gddeploy/v1/exception"
-	// overrides, error := callExecuteAPI(url, "us-west-2")
+	appid := "5vhrlp0vbb"
+	if org == "pci" {
+		appid = "5z4vnar9v4"
+	}
+	url := "https://" + appid + ".execute-api.us-west-2.amazonaws.com/gddeploy/v1/exception"
+	overrides, error := callExecuteAPI(url, "us-west-2")
 
-	overrides, error := getS3Object("gd-audit-prod-cirrus-scan-params", "exceptions/0173a0a34d5e83bfaf3fae87aae86d97359e0897")
 	fmt.Printf("Retrieved overrides: %s\n", overrides)
 	if error != nil {
 		fmt.Printf("Error retrieving overrides:%s\n", error.Error())
 		panic(error)
 	}
-
 	overrides = []byte(`{
 		"rule_list":
 	[{"version": 1,	"updated": 1602700832,
@@ -109,13 +97,53 @@ func getOverrides() []byte {
 	"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
 	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
 	}]}`)
+	return overrides
+
+}
+
+func getOverridesFromS3() []byte {
+	awsaccountid := getAwsAccount()
+
+	fmt.Printf("aws account: %s", awsaccountid)
+	hasher, _ := blake2b.New(20, nil)
+	hasher.Write([]byte(awsaccountid))
+	hashstring := hex.EncodeToString(hasher.Sum(nil)[:])
+
+	org := getSSMParameter("/AdminParams/Team/OrgType")
+	bucket := "gd-audit-prod-cirrus-scan-params"
+	if org == "pci" {
+		bucket = "gd-audit-prod-cirrus-scan-params-p"
+	}
+
+	overrides, error := getS3Object(bucket, "exceptions/"+hashstring)
+	fmt.Printf("Retrieved overrides: %s\n", overrides)
+	if error != nil {
+		fmt.Printf("Error retrieving overrides:%s\n", error.Error())
+		panic(error)
+	}
+	//json from S3 doesn't container rule_list element at root level
+	overrides = []byte(`
+	[{"version": 1,	"updated": 1602700832,
+	"pattern": {"Id": "^containerscan/us-east-1/.*/.*/openssl",
+				"Cve": "^CVE-2020-8285|CVE-2020-36230"
+				},
+	"expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
+	"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
+	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
+	},{"version": 1,"updated": 1605141042,
+	"pattern": {"Id": "^containerscan/us-east-1/sampleimagename/latst/gd_compliance_finding", 
+				"Cpl": "^41"}
+	,"expiration": 1618444800,
+	"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
+	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
+	}]`)
 
 	return overrides
 
 }
 
 func (res *ScanResult) normalize() {
-	overrides := getOverrides()
+	overrides := getOverridesFromAPI()
 	var businessExceptions businessRuleSet
 	json.Unmarshal(overrides, &businessExceptions)
 

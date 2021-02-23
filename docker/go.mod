@@ -11,4 +11,5 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777 // indirect
+	golang.org/x/tools v0.1.0
 )
