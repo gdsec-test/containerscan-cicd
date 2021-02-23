@@ -1,12 +1,15 @@
 package main
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/blake2b"
 )
 
 type businessRuleSet struct {
@@ -66,15 +69,25 @@ func (exc *businessException) apply(finding map[string]interface{}) bool {
 	return false
 }
 
-func (res *ScanResult) normalize() {
-	org := getSSMParameter("/AdminParams/Team/OrgType")
-	appid := "5vhrlp0vbb"
-	if org == "pci" {
-		appid = "5z4vnar9v4"
-	}
-	url := "https://" + appid + ".execute-api.us-west-2.amazonaws.com/gddeploy/v1/exception"
-	overrides, error := callExecuteAPI(url, "us-west-2")
-	fmt.Printf("overrides: %s\n", overrides)
+func getOverrides() []byte {
+	awsaccountid := getAwsAccount()
+
+	fmt.Printf("aws account: %s", awsaccountid)
+	hasher, _ := blake2b.New(20, nil)
+	hasher.Write([]byte(awsaccountid))
+	hashstring := hex.EncodeToString(hasher.Sum(nil)[:])
+	fmt.Print(hashstring)
+
+	// org := getSSMParameter("/AdminParams/Team/OrgType")
+	// appid := "5vhrlp0vbb"
+	// if org == "pci" {
+	// // appid = "5z4vnar9v4"
+	// // }
+	// // url := "https://" + appid + ".execute-api.us-west-2.amazonaws.com/gddeploy/v1/exception"
+	// overrides, error := callExecuteAPI(url, "us-west-2")
+
+	overrides, error := getS3Object("gd-audit-prod-cirrus-scan-params", "exceptions/0173a0a34d5e83bfaf3fae87aae86d97359e0897")
+	fmt.Printf("Retrieved overrides: %s\n", overrides)
 	if error != nil {
 		fmt.Printf("Error retrieving overrides:%s\n", error.Error())
 		panic(error)
@@ -83,23 +96,32 @@ func (res *ScanResult) normalize() {
 	overrides = []byte(`{
 		"rule_list":
 	[{"version": 1,	"updated": 1602700832,
-	"pattern": {"Id": "^containerscan/us-east-1/.*/.*/curl","Cve": "^CVE-2020-8285|CVE-2020-36230"	},
+	"pattern": {"Id": "^containerscan/us-east-1/.*/.*/openssl",
+				"Cve": "^CVE-2020-8285|CVE-2020-36230"
+				},
 	"expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
 	"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
 	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
 	},{"version": 1,"updated": 1605141042,
-	"pattern": {"Id": "^containerscan/us-east-1", "Cid": "^41"}
+	"pattern": {"Id": "^containerscan/us-east-1/sampleimagename/latst/gd_compliance_finding", 
+				"Cpl": "^41"}
 	,"expiration": 1618444800,
 	"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
 	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
 	}]}`)
 
+	return overrides
+
+}
+
+func (res *ScanResult) normalize() {
+	overrides := getOverrides()
 	var businessExceptions businessRuleSet
 	json.Unmarshal(overrides, &businessExceptions)
 
 	res.ComplianceIssues.normalize(businessExceptions.ExceptionList)
 	res.Vulnerabilities.normalize(businessExceptions.ExceptionList)
-	// res.cleanOverrides()
+	res.cleanOverrides()
 }
 
 func deleteOverrides(findings []map[string]interface{}) []map[string]interface{} {

@@ -1,14 +1,19 @@
 package main
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/aws/signer/v4"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/aws/aws-sdk-go/service/ssm"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/sts"
+	"io"
 )
 
 // GetSecret retrieve aws secretmanager secret
@@ -48,6 +53,27 @@ func callExecuteAPI(url string, region string) ([]byte, error) {
 
 }
 
+func getS3Object(bucket string, key string) ([]byte, error) {
+	sess := getAWSSession()
+	sess.Config.Region = aws.String("us-west-2")
+
+	svc := s3.New(sess)
+
+	req, err := svc.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		panic(err)
+	}
+	var reader io.Reader
+	reader = req.Body
+	data, error := ioutil.ReadAll(reader)
+
+	return data, error
+
+}
+
 func getSSMParameter(name string) string {
 
 	sess := getAWSSession()
@@ -64,6 +90,18 @@ func getSSMParameter(name string) string {
 
 	value := *param.Parameter.Value
 	return value
+}
+
+func getAwsAccount() string {
+	sess := getAWSSession()
+	svc := sts.New(sess, aws.NewConfig())
+
+	input := &sts.GetCallerIdentityInput{}
+
+	result, _ := svc.GetCallerIdentity(input)
+	account := result.Account
+	return *account
+
 }
 
 func getAWSSession() *session.Session {
