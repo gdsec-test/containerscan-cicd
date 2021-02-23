@@ -215,7 +215,7 @@ func (vuln *Vulnerabilities) normalize(businessExceptions []businessException) {
 		for _, excep := range businessExceptions {
 			//if one exception matches, the finding will be suppressed
 			isMatched := excep.apply(v)
-			fmt.Printf("finding id: %s - %s\n", strconv.FormatBool(isMatched), findingid)
+			// fmt.Printf("finding id: %s - %s\n", strconv.FormatBool(isMatched), findingid)
 			if isMatched {
 				v["SUPPRESS"] = "SUPPRESS"
 				break

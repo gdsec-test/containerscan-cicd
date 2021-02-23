@@ -48,14 +48,16 @@ func init() {
 func main() {
 	printWithColor(colorGreen, "Container Scanner Started\n")
 
-	accesskey, secretid := getPrismaSecret()
-
+	prismasecret := getSecret(prismaSecretName, "us-east-1")
+	accesskey, secretid := getPrismaKeys(prismasecret)
 	token := getAuthToken(accesskey, secretid)
 
-	downloadTwistCli(token.Token)
+	twistcli := downloadTwistCli(token.Token)
+
+	saveTwistCli(twistcli)
 
 	resultstring := runTwistCli(token.Token, containername)
-	fmt.Println("")
+	fmt.Println(resultstring)
 
 	scanResult := formatTwistlockResult(resultstring)
 

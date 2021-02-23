@@ -91,9 +91,12 @@ func getAPIResponse(url string, authToken string) []byte {
 	return body
 }
 
-func downloadTwistCli(token string) {
+func downloadTwistCli(token string) []byte {
 	twistcli := getAPIResponse(prismaConsoleURL+"/api/v1/util/twistcli", token)
+	return twistcli
 
+}
+func saveTwistCli(twistcli []byte) {
 	err := ioutil.WriteFile("twistcli", twistcli, 0755)
 	if err != nil {
 		printWithColor(colorRed, "Error : Failed to download cli", err)
@@ -116,8 +119,7 @@ func runTwistCli(token string, container string) string {
 	return out.String()
 }
 
-func getPrismaSecret() (string, string) {
-	prismasecret := getSecret(prismaSecretName, "us-east-1")
+func getPrismaKeys(prismasecret *string) (string, string) {
 
 	var p map[string]interface{}
 	err := json.Unmarshal([]byte(*prismasecret), &p)
