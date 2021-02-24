@@ -30,46 +30,48 @@ func formatTwistlockResult(resultstring string) ScanResult {
 }
 
 func getAuthToken(username string, password string) token {
-
 	url := prismaConsoleURL + "/api/v1/authenticate"
-
-	postBody, _ := json.Marshal(map[string]string{
+	payload, _ := json.Marshal(map[string]string{
 		"username": username,
 		"password": password,
 	})
 
-	client := &http.Client{}
-	req, _ := http.NewRequest("POST", url, bytes.NewReader(postBody))
-	req.Header.Add("content-type", "application/json")
-	resp, err := client.Do(req)
-
-	if err != nil {
-		println(err.Error()) // handle error
+	api := API{
+		Client:    &http.Client{},
+		url:       url,
+		authToken: "",
+		method:    "POST",
+		payload:   payload,
 	}
-	defer resp.Body.Close()
-
-	// r = requests.post(
-	// url, headers={"content-type": "application/json"}, data=respo
-	// token = r.json()["token"]
-	body, _ := ioutil.ReadAll(resp.Body)
-	tokenjson := string(body)
+	tokenresult := api.getAPIResponse()
 	var token token
-	json.Unmarshal([]byte(tokenjson), &token)
+	json.Unmarshal(tokenresult, &token)
 	return token
 }
 
-func getAPIResponse(url string, authToken string) []byte {
+type API struct {
+	Client    *http.Client
+	url       string
+	authToken string
+	method    string
+	payload   []byte
+}
+
+func (api *API) getAPIResponse() []byte {
 	var body []byte
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = 2 * time.Minute
 
-	client := &http.Client{}
+	client := api.Client
 	var resp *http.Response
 	var err error
 	var apierror error
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("Authorization", "Bearer "+authToken)
-
+	req, _ := http.NewRequest(api.method, api.url, bytes.NewReader(api.payload))
+	if api.authToken != "" {
+		req.Header.Add("Authorization", "Bearer "+api.authToken)
+	} else {
+		req.Header.Add("content-type", "application/json")
+	}
 	err = backoff.Retry(func() error {
 		resp, apierror = client.Do(req)
 		if apierror != nil {
@@ -92,7 +94,14 @@ func getAPIResponse(url string, authToken string) []byte {
 }
 
 func downloadTwistCli(token string) []byte {
-	twistcli := getAPIResponse(prismaConsoleURL+"/api/v1/util/twistcli", token)
+	api := API{
+		Client:    &http.Client{},
+		url:       prismaConsoleURL + "/api/v1/util/twistcli",
+		authToken: token,
+		method:    "GET",
+		payload:   nil,
+	}
+	twistcli := api.getAPIResponse()
 	return twistcli
 
 }
@@ -106,13 +115,19 @@ func saveTwistCli(twistcli []byte) {
 
 func runTwistCli(token string, container string) string {
 	cmd := exec.Command("/bin/sh", "-c", "./twistcli images scan --details --address "+prismaConsoleURL+" --token "+token+" --ci "+container)
+	return runOSCommandWithOutput(cmd)
+}
+
+func runOSCommandWithOutput(cmd *exec.Cmd) string {
+
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 	err := cmd.Run()
+
 	if err != nil {
-		printWithColor(colorRed, "Error : Unexpected error while executing twistlock cli", err, stderr.String())
+		printWithColor(colorRed, "Error : Unexpected error while executing command", err, stderr.String())
 		os.Exit(1)
 	}
 

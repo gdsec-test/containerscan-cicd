@@ -142,8 +142,7 @@ func getOverridesFromS3() []byte {
 
 }
 
-func (res *ScanResult) normalize() {
-	overrides := getOverridesFromAPI()
+func (res *ScanResult) normalize(overrides []byte) {
 	var businessExceptions businessRuleSet
 	json.Unmarshal(overrides, &businessExceptions)
 

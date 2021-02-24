@@ -61,6 +61,8 @@ func main() {
 
 	scanResult := formatTwistlockResult(resultstring)
 
-	scanResult.normalize()
+	overrides := getOverridesFromAPI()
+
+	scanResult.normalize(overrides)
 	scanResult.reportToCLI()
 }

@@ -1,54 +1,29 @@
 package main
 
 import (
-	"os"
-	"os/exec"
-	"strings"
 	"testing"
 )
 
-func Test_saveTwistCli(t *testing.T) {
-	s := "testcontent"
-	bs := []byte(s)
-	saveTwistCli(bs)
-	if _, err := os.Stat("twistcli"); os.IsNotExist(err) {
-		t.Error("file twistcli doesn't exist")
-	}
+func Test_Normalize(t *testing.T) {
 
-}
+	overrides := []byte(`{
+		"rule_list":
+	[{"version": 1,	"updated": 1602700832,
+	"pattern": {"Id": "^containerscan/us-east-1/.*/.*/openssl",
+				"Cve": "^CVE-2020-8285|CVE-2020-36230"
+				},
+	"expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
+	"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
+	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
+	},{"version": 1,"updated": 1605141042,
+	"pattern": {"Id": "^containerscan/us-east-1/sampleimagename/latst/gd_compliance_finding", 
+				"Cpl": "^41"}
+	,"expiration": 1618444800,
+	"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
+	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
+	}]}`)
 
-func Test_getPrismaKeys(t *testing.T) {
-	prismaSecret :=
-		`{
-		"prismaUsername": "username",
-		"prismaAccessKeyName": "keyname",
-		"prismaAccessKeyId": "accesskeyid",
-		"prismaSecretKey": "secretkey",
-		"snsTopic": ""
-	  }`
-
-	accesskeyid, secretkey := getPrismaKeys(&prismaSecret)
-	if accesskeyid != "accesskeyid" {
-		t.Error("get accesskeyid error")
-	}
-	if secretkey != "secretkey" {
-		t.Error("get secretkey error")
-	}
-
-}
-
-func Test_runOSCommandWithOutput(t *testing.T) {
-	cmd := exec.Command("/bin/sh", "-c", "echo test")
-
-	result := runOSCommandWithOutput(cmd)
-
-	if strings.TrimSpace(result) != "test" {
-		t.Error("run command failed")
-	}
-}
-func Test_formatTwistlockResult(t *testing.T) {
-
-	result := `====DATA[
+	scanresult := `====DATA[
     {
         "entityInfo": {
             "_id": "sha256:8c1c64b494fa20541be87a87d23c67c17684501c62e0684cd663c138c38cba3f",
@@ -132,12 +107,13 @@ func Test_formatTwistlockResult(t *testing.T) {
         }
     }
 ]
-`
+	`
 
-	formatedResult := formatTwistlockResult(result)
+	formatedResult := formatTwistlockResult(scanresult)
+
+	formatedResult.normalize(overrides)
 	if len(formatedResult.ComplianceIssues) == 0 {
-		t.Error("format error")
-
+		t.Error("normalize failed")
 	}
 
 }
