@@ -1,15 +1,14 @@
 package main
 
 import (
-	"encoding/hex"
+	// "encoding/hex"
 	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
-
-	"golang.org/x/crypto/blake2b"
+	// "golang.org/x/crypto/blake2b"
 )
 
 type businessRuleSet struct {
@@ -41,12 +40,12 @@ func (exc *businessException) apply(finding map[string]interface{}) bool {
 			return false
 		}
 		value, ok := finding[strings.ToLower(attr)].(string)
-		// fmt.Println("Pattern: fieldname %s\tValue: %v\n against %s", attr, pattern, value)
-
+		fmt.Printf("Pattern: fieldname %s\tValue: %v  against %s\n", attr, pattern, value)
 		if ok {
 			matchResult, error := regexp.MatchString(pattern, value)
 			if error == nil {
 				if matchResult {
+
 					matched = true
 				} else {
 					return false
@@ -66,17 +65,16 @@ func (exc *businessException) apply(finding map[string]interface{}) bool {
 }
 
 func getOverridesFromAPI() []byte {
-
+	awsaccountid := getAwsAccount()
 	org := getSSMParameter("/AdminParams/Team/OrgType")
 
 	appid := "5vhrlp0vbb"
 	if org == "pci" {
 		appid = "5z4vnar9v4"
 	}
-	url := "https://" + appid + ".execute-api.us-west-2.amazonaws.com/gddeploy/v1/exception"
+	url := fmt.Sprintf("https://%s.execute-api.us-west-2.amazonaws.com/gddeploy/v1/exception?account=%s", appid, awsaccountid)
 	overrides, error := callExecuteAPI(url, "us-west-2")
 
-	fmt.Printf("Retrieved overrides: %s\n", overrides)
 	if error != nil {
 		fmt.Printf("Error retrieving overrides:%s\n", error.Error())
 		panic(error)
@@ -84,23 +82,23 @@ func getOverridesFromAPI() []byte {
 	overrides = []byte(`{
 		"rule_list":
 	[{"version": 1,	"updated": 1602700832,
-	"pattern": {"Id": "^containerscan/us-east-1/.*/.*/openssl",
+	"pattern": {"Fid": "^containerscan/us-east-1/.*/.*/curl",
 				"Cve": "^CVE-2020-8285|CVE-2020-36230"
 				},
-	"expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
-	"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
-	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
+	"expiration": 1618444800	
+	"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427"
 	},{"version": 1,"updated": 1605141042,
-	"pattern": {"Id": "^containerscan/us-east-1/sampleimagename/latst/gd_compliance_finding", 
-				"Cpl": "^41"}
+	"pattern": {"Fid": "^containerscan/us-east-1/.*/.*/gd_prisma_compliance", 
+				"Cpl": "^424"}
 	,"expiration": 1618444800,
-	"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
-	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
+	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729"
 	}]}`)
 	return overrides
 
 }
 
+////COmment out S3 call, use api
+/*
 func getOverridesFromS3() []byte {
 	awsaccountid := getAwsAccount()
 
@@ -122,25 +120,10 @@ func getOverridesFromS3() []byte {
 		panic(error)
 	}
 	//json from S3 doesn't container rule_list element at root level
-	overrides = []byte(`
-	[{"version": 1,	"updated": 1602700832,
-	"pattern": {"Id": "^containerscan/us-east-1/.*/.*/openssl",
-				"Cve": "^CVE-2020-8285|CVE-2020-36230"
-				},
-	"expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
-	"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
-	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
-	},{"version": 1,"updated": 1605141042,
-	"pattern": {"Id": "^containerscan/us-east-1/sampleimagename/latst/gd_compliance_finding", 
-				"Cpl": "^41"}
-	,"expiration": 1618444800,
-	"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
-	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
-	}]`)
-
 	return overrides
 
 }
+*/
 
 func (res *ScanResult) normalize(overrides []byte) {
 	var businessExceptions businessRuleSet
@@ -148,7 +131,7 @@ func (res *ScanResult) normalize(overrides []byte) {
 
 	res.ComplianceIssues.normalize(businessExceptions.ExceptionList)
 	res.Vulnerabilities.normalize(businessExceptions.ExceptionList)
-	res.cleanOverrides()
+	// res.cleanOverrides()
 }
 
 func deleteOverrides(findings []map[string]interface{}) []map[string]interface{} {
@@ -183,7 +166,7 @@ func (comp *ComplianceIssues) normalize(businessExceptions []businessException) 
 
 	for _, c := range *comp {
 		c["cpl"] = strconv.Itoa(int(c["id"].(float64)))
-		c["id"] = findingid
+		c["fid"] = findingid
 		for _, excep := range businessExceptions {
 			//if one exception matches, the finding will be suppressed
 			if excep.apply(c) {
@@ -196,9 +179,6 @@ func (comp *ComplianceIssues) normalize(businessExceptions []businessException) 
 
 func (vuln *Vulnerabilities) normalize(businessExceptions []businessException) {
 	// finding id: f"containerscan/{aws_region}/{repository}/{tag}/{r['Package']}",
-	// containerscan/us-west-2/containerscan/latest/krb5
-	// 226955763576.dkr.ecr.us-east-1.amazonaws.com/security-fluentd-aggregator-dev-private:latest
-
 	//construct finding id
 	awsRegion := between(containername, ".dkr.ecr.", ".amazonaws.com")
 	repo := between(containername, ".amazonaws.com/", ":")
@@ -209,13 +189,11 @@ func (vuln *Vulnerabilities) normalize(businessExceptions []businessException) {
 		pkgname := v["packageName"].(string)
 
 		findingid += pkgname
-		v["id"] = findingid
+		v["fid"] = findingid
 
 		for _, excep := range businessExceptions {
-			//if one exception matches, the finding will be suppressed
-			isMatched := excep.apply(v)
-			// fmt.Printf("finding id: %s - %s\n", strconv.FormatBool(isMatched), findingid)
-			if isMatched {
+			//if one exception rule matches, the finding will be suppressed
+			if excep.apply(v) {
 				v["SUPPRESS"] = "SUPPRESS"
 				break
 			}

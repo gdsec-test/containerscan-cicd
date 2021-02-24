@@ -1,63 +1,28 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
-	"os"
-	"os/exec"
-	"strings"
 	"testing"
 )
 
-func Test_saveTwistCli(t *testing.T) {
-	s := "testcontent"
-	bs := []byte(s)
-	saveTwistCli(bs)
-	if _, err := os.Stat("twistcli"); os.IsNotExist(err) {
-		t.Error("file twistcli doesn't exist")
-	}
+func Test_reportToCLI(t *testing.T) {
 
-}
+	overrides := []byte(`{
+		"rule_list":
+	[{"version": 1,	"updated": 1602700832,
+	"pattern": {"Fid": "^containerscan/us-west-2/.*/.*/musl",
+				"Cve": "^CVE-2020-8285|CVE-2020-36230"
+				},
+	"expiration": 1618444800,
+	"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427"
+	
+	},{"version": 1,"updated": 1605141042,
+	"pattern": {"Fid": "^containerscan/us-west-2/*/*/gd_prisma_compliance", 
+				"Cpl": "^41"}
+	,"expiration": 1618444800,
+	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729"
+	}]}`)
 
-func Test_getPrismaKeys(t *testing.T) {
-	prismaSecret :=
-		`{
-		"prismaUsername": "username",
-		"prismaAccessKeyName": "keyname",
-		"prismaAccessKeyId": "accesskeyid",
-		"prismaSecretKey": "secretkey",
-		"snsTopic": ""
-	  }`
-
-	accesskeyid, secretkey := getPrismaKeys(&prismaSecret)
-	if accesskeyid != "accesskeyid" {
-		t.Error("get accesskeyid error")
-	}
-	if secretkey != "secretkey" {
-		t.Error("get secretkey error")
-	}
-
-	prismaSecret = "invalid jason"
-
-	assert.Panics(t, func() { getPrismaKeys(&prismaSecret) }, " Didn't panic reading from invalid prisma secret")
-
-}
-
-func Test_runOSCommandWithOutput(t *testing.T) {
-	cmd := exec.Command("/bin/sh", "-c", "echo test")
-
-	result := runOSCommandWithOutput(cmd)
-
-	if strings.TrimSpace(result) != "test" {
-		t.Error("run command failed")
-	}
-
-	cmd = exec.Command("/bin/aaa", "-c", "echo test")
-	assert.Panics(t, func() { runOSCommandWithOutput(cmd) }, "The code did not panic")
-}
-
-func Test_formatTwistlockResult(t *testing.T) {
-
-	result := `====DATA[
+	scanresult := `====DATA[
     {
         "entityInfo": {
             "_id": "sha256:8c1c64b494fa20541be87a87d23c67c17684501c62e0684cd663c138c38cba3f",
@@ -76,7 +41,7 @@ func Test_formatTwistlockResult(t *testing.T) {
                     "status": "",
                     "cve": "",
                     "cause": "",
-                    "description": "It is a good practice to run the container as a non-root user, if possible. Though user\nnamespace mapping is now available, if a user is already defined in the container image, the\ncontainer is run as that user by default and specific user namespace remapping is not\nrequired",
+                    "description": "It is a good practice to run the container as a non-root user, if possible.",
                     "title": "(CIS_Docker_CE_v1.1.0 - 4.1) Image should be created with a non-root user",
                     "vecStr": "",
                     "exploit": "",
@@ -104,7 +69,7 @@ func Test_formatTwistlockResult(t *testing.T) {
                     "status": "fixed in 1.1.20-r5",
                     "cve": "CVE-2019-14697",
                     "cause": "",
-                    "description": "musl libc through 1.1.23 has an x87 floating-point stack adjustment imbalance, related to the math/i386/ directory. In some cases, use of this library could introduce out-of-bounds writes that are not present in an application\\'s source code.",
+                    "description": "musl libc through 1.1.23 has an x87 floating-point stack adjustment imbalance, related to the math/i386/ directory. ",
                     "title": "",
                     "vecStr": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
                     "exploit": "",
@@ -141,14 +106,10 @@ func Test_formatTwistlockResult(t *testing.T) {
         }
     }
 ]
-`
+	`
 
-	formatedResult := formatTwistlockResult(result)
-	if len(formatedResult.ComplianceIssues) == 0 {
-		t.Error("format error")
-	}
-
-	result = "test"
-	assert.Panics(t, func() { formatTwistlockResult(result) }, "Didn't panic reading from invalid prisma result")
+	formatedResult := formatTwistlockResult(scanresult)
+	formatedResult.normalize(overrides)
+	formatedResult.reportToCLI()
 
 }

@@ -9,11 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/aws/signer/v4"
-	"github.com/aws/aws-sdk-go/service/s3"
+	// "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"io"
 )
 
 // GetSecret retrieve aws secretmanager secret
@@ -53,6 +52,8 @@ func callExecuteAPI(url string, region string) ([]byte, error) {
 
 }
 
+////COmment out S3 call, use api
+/*
 func getS3Object(bucket string, key string) ([]byte, error) {
 	sess := getAWSSession()
 	sess.Config.Region = aws.String("us-west-2")
@@ -73,6 +74,7 @@ func getS3Object(bucket string, key string) ([]byte, error) {
 	return data, error
 
 }
+*/
 
 func getSSMParameter(name string) string {
 

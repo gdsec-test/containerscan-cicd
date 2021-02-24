@@ -1,7 +1,8 @@
+# FROM 764525110978.dkr.ecr.us-east-1.amazonaws.com/alpine-golang:1.15-alpine
 FROM golang:alpine
 
-# TODO: temporary commented out, use golden ami when CICD is done
-# FROM 764525110978.dkr.ecr.us-east-1.amazonaws.com/alpine-golang:1.15-alpine
+
+
 
 RUN apk add git
 

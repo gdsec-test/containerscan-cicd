@@ -5,13 +5,21 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
 )
+
+type API struct {
+	Client    *http.Client
+	url       string
+	authToken string
+	method    string
+	payload   []byte
+	header    map[string]string
+}
 
 func formatTwistlockResult(resultstring string) ScanResult {
 	delimiter := "====DATA"
@@ -23,7 +31,7 @@ func formatTwistlockResult(resultstring string) ScanResult {
 
 	if err := json.Unmarshal([]byte(res), &s); err != nil {
 		printWithColor(colorRed, "Error : Unable to unmarshal twistlock result", err)
-		os.Exit(1)
+		panic(err)
 	}
 
 	return s[0].EntityInfo
@@ -48,15 +56,6 @@ func getAuthToken(username string, password string) token {
 	var token token
 	json.Unmarshal(tokenresult, &token)
 	return token
-}
-
-type API struct {
-	Client    *http.Client
-	url       string
-	authToken string
-	method    string
-	payload   []byte
-	header    map[string]string
 }
 
 func (api *API) getAPIResponse() []byte {
@@ -92,7 +91,7 @@ func (api *API) getAPIResponse() []byte {
 
 	if err != nil {
 		printWithColor(colorRed, "Error : Failed to call API", err)
-		os.Exit(1)
+		panic(err)
 	}
 	return body
 }
@@ -114,7 +113,7 @@ func saveTwistCli(twistcli []byte) {
 	err := ioutil.WriteFile("twistcli", twistcli, 0755)
 	if err != nil {
 		printWithColor(colorRed, "Error : Failed to download cli", err)
-		os.Exit(1)
+		panic(err)
 	}
 }
 
@@ -133,7 +132,7 @@ func runOSCommandWithOutput(cmd *exec.Cmd) string {
 
 	if err != nil {
 		printWithColor(colorRed, "Error : Unexpected error while executing command", err, stderr.String())
-		os.Exit(1)
+		panic(err)
 	}
 
 	return out.String()

@@ -10,6 +10,7 @@ import (
 )
 
 func (res ScanResult) reportToCLI() {
+	containername = "226955763576.dkr.ecr.us-west-2.amazonaws.com/com.godaddy.security.tdagent:latest"
 	cFound, cBlocking := res.ComplianceIssues.reportToCLI()
 	fmt.Println()
 	vFound, vBlocking := res.Vulnerabilities.reportToCLI()

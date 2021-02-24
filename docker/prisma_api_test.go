@@ -35,11 +35,17 @@ func TestDoStuffWithRoundTripper(t *testing.T) {
 		}
 	})
 
-	api := API{client, "http://example.com", "AAAAA", "GET", nil, nil}
+	api := API{client, "http://example.com", "AAAAA", "GET", nil, map[string]string{"content-type": "application/json"}}
 	body := api.getAPIResponse()
 	myString := string(body)
 	if myString != "OK" {
 		t.Error("API call error")
 	}
 
+	api = API{client, "http://example.com", "AAAAA", "GET", []byte("test"), map[string]string{"content-type": "application/json"}}
+	body = api.getAPIResponse()
+	myString = string(body)
+	if myString != "OK" {
+		t.Error("API call error")
+	}
 }

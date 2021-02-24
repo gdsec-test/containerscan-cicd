@@ -5,24 +5,7 @@ import (
 )
 
 func Test_Normalize(t *testing.T) {
-
-	overrides := []byte(`{
-		"rule_list":
-	[{"version": 1,	"updated": 1602700832,
-	"pattern": {"Id": "^containerscan/us-east-1/.*/.*/openssl",
-				"Cve": "^CVE-2020-8285|CVE-2020-36230"
-				},
-	"expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
-	"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
-	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
-	},{"version": 1,"updated": 1605141042,
-	"pattern": {"Id": "^containerscan/us-east-1/sampleimagename/latst/gd_compliance_finding", 
-				"Cpl": "^41"}
-	,"expiration": 1618444800,
-	"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
-	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
-	}]}`)
-
+	containername = "226955763576.dkr.ecr.us-west-2.amazonaws.com/com.godaddy.security.tdagent:latest"
 	scanresult := `====DATA[
     {
         "entityInfo": {
@@ -42,7 +25,7 @@ func Test_Normalize(t *testing.T) {
                     "status": "",
                     "cve": "",
                     "cause": "",
-                    "description": "It is a good practice to run the container as a non-root user, if possible. Though user\nnamespace mapping is now available, if a user is already defined in the container image, the\ncontainer is run as that user by default and specific user namespace remapping is not\nrequired",
+                    "description": "It is a good practice to run the container as a non-root user, if possible.",
                     "title": "(CIS_Docker_CE_v1.1.0 - 4.1) Image should be created with a non-root user",
                     "vecStr": "",
                     "exploit": "",
@@ -70,7 +53,7 @@ func Test_Normalize(t *testing.T) {
                     "status": "fixed in 1.1.20-r5",
                     "cve": "CVE-2019-14697",
                     "cause": "",
-                    "description": "musl libc through 1.1.23 has an x87 floating-point stack adjustment imbalance, related to the math/i386/ directory. In some cases, use of this library could introduce out-of-bounds writes that are not present in an application\\'s source code.",
+                    "description": "musl libc through 1.1.23 has an x87 floating-point stack adjustment imbalance, related to the math/i386/ directory. ",
                     "title": "",
                     "vecStr": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
                     "exploit": "",
@@ -110,6 +93,21 @@ func Test_Normalize(t *testing.T) {
 	`
 
 	formatedResult := formatTwistlockResult(scanresult)
+
+	overrides := []byte(`{
+		"rule_list":
+	[{"version": 1,	
+	"pattern": {"Fid": "^containerscan/us-west-2",
+				"Cve": "^CVE-2019-14697|CVE-2020-36230"
+				},
+	"expiration": 1618444800,
+	"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427"
+	},{"version": 1,"updated": 1605141042,
+	"pattern": {"Fid": "^containerscan/us-west-2/*/*/gd_prisma_compliance", 
+				"Cpl": "^41"}
+	,"expiration": 1618444800,
+	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
+	}]}`)
 
 	formatedResult.normalize(overrides)
 	if len(formatedResult.ComplianceIssues) == 0 {

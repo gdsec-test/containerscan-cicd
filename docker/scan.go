@@ -46,7 +46,7 @@ func init() {
 }
 
 func main() {
-	printWithColor(colorGreen, "Container Scanner Started\n")
+	printWithColor(colorGreen, "Scanning container image: "+containername+"\n")
 
 	prismasecret := getSecret(prismaSecretName, "us-east-1")
 	accesskey, secretid := getPrismaKeys(prismasecret)
