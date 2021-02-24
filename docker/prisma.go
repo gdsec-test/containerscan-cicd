@@ -42,6 +42,7 @@ func getAuthToken(username string, password string) token {
 		authToken: "",
 		method:    "POST",
 		payload:   payload,
+		header:    map[string]string{"content-type": "application/json"},
 	}
 	tokenresult := api.getAPIResponse()
 	var token token
@@ -55,6 +56,7 @@ type API struct {
 	authToken string
 	method    string
 	payload   []byte
+	header    map[string]string
 }
 
 func (api *API) getAPIResponse() []byte {
@@ -67,11 +69,13 @@ func (api *API) getAPIResponse() []byte {
 	var err error
 	var apierror error
 	req, _ := http.NewRequest(api.method, api.url, bytes.NewReader(api.payload))
-	if api.authToken != "" {
-		req.Header.Add("Authorization", "Bearer "+api.authToken)
-	} else {
-		req.Header.Add("content-type", "application/json")
+	if api.header != nil {
+		for k, v := range api.header {
+			req.Header.Add(k, v)
+		}
+
 	}
+
 	err = backoff.Retry(func() error {
 		resp, apierror = client.Do(req)
 		if apierror != nil {
@@ -100,6 +104,7 @@ func downloadTwistCli(token string) []byte {
 		authToken: token,
 		method:    "GET",
 		payload:   nil,
+		header:    map[string]string{"Authorization": "Bearer " + token},
 	}
 	twistcli := api.getAPIResponse()
 	return twistcli

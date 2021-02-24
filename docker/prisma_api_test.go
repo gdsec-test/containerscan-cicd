@@ -35,7 +35,7 @@ func TestDoStuffWithRoundTripper(t *testing.T) {
 		}
 	})
 
-	api := API{client, "http://example.com", "AAAAA"}
+	api := API{client, "http://example.com", "AAAAA", "GET", nil, nil}
 	body := api.getAPIResponse()
 	myString := string(body)
 	if myString != "OK" {

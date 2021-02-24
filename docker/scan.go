@@ -57,7 +57,7 @@ func main() {
 	saveTwistCli(twistcli)
 
 	resultstring := runTwistCli(token.Token, containername)
-	fmt.Println(resultstring)
+	fmt.Println("")
 
 	scanResult := formatTwistlockResult(resultstring)
 
