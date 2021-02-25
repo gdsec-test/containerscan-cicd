@@ -26,6 +26,7 @@ func (exc *businessException) apply(finding map[string]interface{}) bool {
 	//if expired, pass
 	if exc.Expiration > 0 {
 		if time.Now().UTC().Unix() > exc.Expiration {
+			fmt.Println("expired rule")
 			return false
 		}
 	}
@@ -40,12 +41,12 @@ func (exc *businessException) apply(finding map[string]interface{}) bool {
 			return false
 		}
 		value, ok := finding[strings.ToLower(attr)].(string)
-		fmt.Printf("Pattern: fieldname %s\tValue: %v  against %s\n", attr, pattern, value)
+
 		if ok {
 			matchResult, error := regexp.MatchString(pattern, value)
 			if error == nil {
 				if matchResult {
-
+					fmt.Printf("Pattern: fieldname %s\tValue: %v  against %s\n", attr, pattern, value)
 					matched = true
 				} else {
 					return false
@@ -79,20 +80,24 @@ func getOverridesFromAPI() []byte {
 		fmt.Printf("Error retrieving overrides:%s\n", error.Error())
 		panic(error)
 	}
+
 	overrides = []byte(`{
 		"rule_list":
 	[{"version": 1,	"updated": 1602700832,
 	"pattern": {"Fid": "^containerscan/us-east-1/.*/.*/curl",
 				"Cve": "^CVE-2020-8285|CVE-2020-36230"
 				},
-	"expiration": 1618444800	
-	"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427"
+	"expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
+	"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
+	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
 	},{"version": 1,"updated": 1605141042,
 	"pattern": {"Fid": "^containerscan/us-east-1/.*/.*/gd_prisma_compliance", 
 				"Cpl": "^424"}
 	,"expiration": 1618444800,
-	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729"
+	"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
+	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
 	}]}`)
+
 	return overrides
 
 }
@@ -126,12 +131,14 @@ func getOverridesFromS3() []byte {
 */
 
 func (res *ScanResult) normalize(overrides []byte) {
+	fmt.Println("in normalize")
+	fmt.Println(string(overrides))
 	var businessExceptions businessRuleSet
 	json.Unmarshal(overrides, &businessExceptions)
 
 	res.ComplianceIssues.normalize(businessExceptions.ExceptionList)
 	res.Vulnerabilities.normalize(businessExceptions.ExceptionList)
-	// res.cleanOverrides()
+	res.cleanOverrides()
 }
 
 func deleteOverrides(findings []map[string]interface{}) []map[string]interface{} {
@@ -167,6 +174,7 @@ func (comp *ComplianceIssues) normalize(businessExceptions []businessException) 
 	for _, c := range *comp {
 		c["cpl"] = strconv.Itoa(int(c["id"].(float64)))
 		c["fid"] = findingid
+
 		for _, excep := range businessExceptions {
 			//if one exception matches, the finding will be suppressed
 			if excep.apply(c) {
