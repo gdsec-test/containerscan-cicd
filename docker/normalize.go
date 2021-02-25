@@ -46,7 +46,7 @@ func (exc *businessException) apply(finding map[string]interface{}) bool {
 			matchResult, error := regexp.MatchString(pattern, value)
 			if error == nil {
 				if matchResult {
-					fmt.Printf("Pattern: fieldname %s\tValue: %v  against %s\n", attr, pattern, value)
+					// fmt.Printf("Pattern: fieldname %s\tValue: %v  against %s\n", attr, pattern, value)
 					matched = true
 				} else {
 					return false
@@ -81,22 +81,24 @@ func getOverridesFromAPI() []byte {
 		panic(error)
 	}
 
-	overrides = []byte(`{
-		"rule_list":
-	[{"version": 1,	"updated": 1602700832,
-	"pattern": {"Fid": "^containerscan/us-east-1/.*/.*/curl",
-				"Cve": "^CVE-2020-8285|CVE-2020-36230"
-				},
-	"expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
-	"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
-	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
-	},{"version": 1,"updated": 1605141042,
-	"pattern": {"Fid": "^containerscan/us-east-1/.*/.*/gd_prisma_compliance", 
-				"Cpl": "^424"}
-	,"expiration": 1618444800,
-	"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
-	"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
-	}]}`)
+	// ,"Cve": "^CVE-2018-14721|CVE-2019-20330"
+
+	// overrides = []byte(`{
+	// "rule_list":
+	// [{"version": 1,	"updated": 1602700832,
+	// "pattern": {"Fid": "^containerscan/us-east-1/.*/.*/com.fasterxml.jackson.core_jackson-databind"
+	// },
+	// "expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
+	// "exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
+	// "author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
+	// },{"version": 1,"updated": 1605141042,
+	// "pattern": {
+	// "Fid": "^containerscan/us-east-1/.*/.*/gd_prisma_compliance",
+	// "Cpl": "^424"}
+	// ,"expiration": 1618444800,
+	// "comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
+	// "author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
+	// }]}`)
 
 	return overrides
 
@@ -131,8 +133,8 @@ func getOverridesFromS3() []byte {
 */
 
 func (res *ScanResult) normalize(overrides []byte) {
-	fmt.Println("in normalize")
-	fmt.Println(string(overrides))
+	// fmt.Println("in normalize")
+	// fmt.Println(string(overrides))
 	var businessExceptions businessRuleSet
 	json.Unmarshal(overrides, &businessExceptions)
 

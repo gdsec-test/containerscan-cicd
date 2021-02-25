@@ -34,22 +34,22 @@ func (comp ComplianceIssues) reportToCLI() (bool, bool) {
 	printWithColor(colorRed, "Compliance Issues :")
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Id", "Severity", "Title", "SUPPRESS"})
+	table.SetHeader([]string{"Id", "Severity", "Title"})
 	table.SetRowLine(true)
 	table.SetRowSeparator("-")
 	table.SetHeaderColor(
 		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold},
-		tablewriter.Colors{tablewriter.Bold},
+		// tablewriter.Colors{tablewriter.Bold},
 		// tablewriter.Colors{tablewriter.Bold}
 	)
 	blocking := false
 	for _, c := range comp {
-		sup := ""
-		if c["SUPPRESS"] != nil {
-			sup = "SUPPRESS"
-		}
+		// sup := ""
+		// if c["SUPPRESS"] != nil {
+		// sup = "SUPPRESS"
+		// }
 		if c["block"] != nil {
 			blocking = true
 		}
@@ -58,7 +58,7 @@ func (comp ComplianceIssues) reportToCLI() (bool, bool) {
 			c["severity"].(string),
 			c["title"].(string),
 			// c["type"].(string),
-			sup,
+			// sup,
 		})
 	}
 
@@ -92,7 +92,7 @@ func (vuln Vulnerabilities) reportToCLI() (bool, bool) {
 		// "Description",
 		// "Type",
 		"Link",
-		"SUPPRESS",
+		// "SUPPRESS",
 	})
 	table.SetRowLine(true)
 	table.SetRowSeparator("-")
@@ -104,14 +104,14 @@ func (vuln Vulnerabilities) reportToCLI() (bool, bool) {
 		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold},
 		// tablewriter.Colors{tablewriter.Bold},
-		tablewriter.Colors{tablewriter.Bold},
+		// tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold})
 
 	for _, v := range vuln {
-		sup := ""
-		if v["SUPPRESS"] != nil {
-			sup = "SUPPRESS"
-		}
+		// sup := ""
+		// if v["SUPPRESS"] != nil {
+		// sup = "SUPPRESS"
+		// }
 		if v["block"] != nil {
 			blocking = true
 		}
@@ -124,7 +124,6 @@ func (vuln Vulnerabilities) reportToCLI() (bool, bool) {
 			v["packageVersion"].(string),
 			// v["description"].(string),
 			"https://web.nvd.nist.gov/view/vuln/detail?vulnId=" + v["cve"].(string),
-			sup,
 		})
 	}
 
