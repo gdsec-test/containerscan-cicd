@@ -4,24 +4,25 @@ import (
 	"testing"
 )
 
+var overrides = []byte(`{
+    "rule_list":
+[{"version": 1,	"updated": 1602700832,
+"pattern": {"Fid": "^containerscan/us-west-2/.*/.*/curl",
+            "Cve": "^CVE-2019-14697|CVE-2020-36230"
+            },
+"expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
+"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
+"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
+},{"version": 1,"updated": 1605141042,
+"pattern": {"Fid": "^containerscan/us-west-2/.*/.*/gd_prisma_compliance", 
+            "Cpl": "^414"}
+,"expiration": 1618444800,
+"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
+"author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
+}]}`)
+
 func Test_reportToCLI(t *testing.T) {
-
-	overrides := []byte(`{
-		"rule_list":
-	[{"version": 1,	"updated": 1602700832,
-	"pattern": {"Fid": "^containerscan/us-west-2/.*/.*/musl",
-				"Cve": "^CVE-2020-8285|CVE-2020-36230"
-				},
-	"expiration": 1618444800,
-	"exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427"
-	
-	},{"version": 1,"updated": 1605141042,
-	"pattern": {"Fid": "^containerscan/us-west-2/*/*/gd_prisma_compliance", 
-				"Cpl": "^41"}
-	,"expiration": 1618444800,
-	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729"
-	}]}`)
-
+	containername = "226955763576.dkr.ecr.us-west-2.amazonaws.com/com.godaddy.security.tdagent:latest"
 	scanresult := `====DATA[
     {
         "entityInfo": {
@@ -109,7 +110,12 @@ func Test_reportToCLI(t *testing.T) {
 	`
 
 	formatedResult := formatTwistlockResult(scanresult)
+
 	formatedResult.normalize(overrides)
 	formatedResult.reportToCLI()
+
+	// formatedResult.ComplianceIssues[0]["block"] = true
+	// formatedResult.Vulnerabilities[0]["block"] = true
+	// formatedResult.reportToCLI()
 
 }

@@ -27,6 +27,13 @@ func Test_between(t *testing.T) {
 		t.Error("between failed")
 	}
 
+	a = "eee"
+	b = "bbb"
+	result = between(value, a, b)
+	if result != "" {
+		t.Error("between failed")
+	}
+
 }
 
 func Test_before(t *testing.T) {
