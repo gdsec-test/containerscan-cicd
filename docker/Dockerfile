@@ -1,10 +1,15 @@
 FROM 764525110978.dkr.ecr.us-east-1.amazonaws.com/alpine-golang:1.15-alpine-3.12
 
-
-# RUN apk add git
 USER root
 
-RUN rm /usr/local/go/src/crypto/tls/testdata/example-key.pem
+
+
+RUN rm /usr/local/go/src/crypto/tls/testdata/example-key.pem 
+    # && \
+    # apk add --update docker openrc && \
+    # rc-update add docker boot && \
+    # apk --no-cache add shadow && \
+    # usermod -aG docker worker
 
 RUN mkdir /app
 ## We copy everything in the root directory
@@ -20,12 +25,12 @@ RUN go build -o main .
 ## Our start command which kicks off
 ## our newly created binary executable
 
-# RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-# USER appuser
+RUN chmod -R a+rwxX /app 
 
-ENTRYPOINT /app/main $CONTAINER
+# USER worker
+
+CMD /app/main $CONTAINER
 # CMD /app/main $AK $SI $CONTAINER
-
 
 
 
