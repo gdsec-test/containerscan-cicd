@@ -11,7 +11,7 @@ env:
 jobs:
   build-and-scan:
     name: Build and Scan for Vulnerabilities
-    runs-on: ubuntu-latest
+    runs-on: cicd-contnrscan
     
     steps:
     - name: Checkout
