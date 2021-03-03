@@ -11,7 +11,7 @@ env:
 jobs:
   build-and-scan:
     name: Build and Scan for Vulnerabilities
-    runs-on: cicd-contnrscan
+    runs-on: self-hosted
     
     steps:
     - name: Checkout
