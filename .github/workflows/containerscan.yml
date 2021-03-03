@@ -7,7 +7,7 @@ env:
   CONTAINER_IMAGE: badcontainer
   CONTAINER_IMAGE_TWISTCLI: containerscan
 
-  
+
 jobs:
   build-and-scan:
     name: Build and Scan for Vulnerabilities
@@ -26,6 +26,10 @@ jobs:
         role-duration-seconds: 3600
         aws-region: us-west-2
 
+    - name: Check AWS Role
+      run: |
+      aws sts get-caller-identity
+    
     - name: Log into golden image ECR
       run: |
         aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 764525110978.dkr.ecr.us-west-2.amazonaws.com
