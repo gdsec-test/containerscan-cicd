@@ -7,6 +7,7 @@ env:
   CONTAINER_IMAGE: badcontainer
   CONTAINER_IMAGE_TWISTCLI: containerscan
 
+  
 jobs:
   build-and-scan:
     name: Build and Scan for Vulnerabilities
