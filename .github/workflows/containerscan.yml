@@ -27,8 +27,7 @@ jobs:
         aws-region: us-west-2
 
     - name: Check AWS Role
-      run: |
-      aws sts get-caller-identity
+      run: aws sts get-caller-identity
 
     - name: Log into golden image ECR
       run: |
