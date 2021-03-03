@@ -4,7 +4,6 @@ name: scan container images
 env:
   TL_USER: ${{ secrets.TL_USER }}
   TL_PASS: ${{ secrets.TL_PASS }}
-    
   CONTAINER_IMAGE: badcontainer
   CONTAINER_IMAGE_TWISTCLI: containerscan
 
