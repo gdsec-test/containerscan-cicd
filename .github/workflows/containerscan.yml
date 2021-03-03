@@ -4,7 +4,6 @@ name: scan container images
 env:
   TL_USER: ${{ secrets.TL_USER }}
   TL_PASS: ${{ secrets.TL_PASS }}
-  CONTAINER_IMAGE: badcontainer
   CONTAINER_IMAGE_TWISTCLI: containerscan
 
 
@@ -22,7 +21,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_TOKEN_VALUE }}
-        role-to-assume: ${{ secrets.DEV_AWS_DEPLOY_ROLE }}
+        role-to-assume: ${{ secrets.DEV_PRIVATE_AWS_DEPLOY_ROLE }}
         role-duration-seconds: 3600
         aws-region: us-west-2
 
@@ -33,15 +32,12 @@ jobs:
       run: |
         aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 764525110978.dkr.ecr.us-west-2.amazonaws.com
 
-    # - name: Build and tag the image
-      # run: docker build -t $CONTAINER_IMAGE .
 
     - name: Build and tag the image twistcli
-      run: docker build -t $CONTAINER_IMAGE_TWISTCLI ./docker
+      run: docker build -t ${{env.CONTAINER_IMAGE_TWISTCLI}} -t ${{github.sha}} ./docker
     
-    - name: Build bad container
-      run: docker build -t $CONTAINER_IMAGE ./test
-
+    #- name: Push Image to ECR
+    #  run: docker push $(LOGAGG_REPO)/$(LOGAGG_IMAGE) --all-tags
     # - name: Scan the image
       # env:
         # TL_USER: ${{ secrets.PRISMA_ACCESSKEY }}
