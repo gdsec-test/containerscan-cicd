@@ -2,8 +2,7 @@
 
 FROM golang:alpine
 
-RUN adduser -D -u1000 worker && \
-    chown -R worker:worker /app
+RUN adduser -D -u1000 worker
 
 USER worker
 
