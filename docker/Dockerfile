@@ -27,7 +27,7 @@ RUN go build -o main .
 
 RUN chmod -R a+rwxX /app 
 
-# USER worker
+USER worker
 
 CMD /app/main $CONTAINER
 # CMD /app/main $AK $SI $CONTAINER

@@ -1,11 +1,9 @@
 on: [pull_request]
 
 name: scan container images
-env:
-  TL_USER: ${{ secrets.TL_USER }}
-  TL_PASS: ${{ secrets.TL_PASS }}
+env:   
   CONTAINER_IMAGE_TWISTCLI: containerscan
-
+  CONTAINER_IMAGE_TEST: testcontainer
 
 jobs:
   build-and-scan:
@@ -36,11 +34,12 @@ jobs:
     - name: Build and tag the image twistcli
       run: docker build -t ${{env.CONTAINER_IMAGE_TWISTCLI}} -t ${{github.sha}} ./docker
     
-    #- name: Push Image to ECR
-    #  run: docker push $(LOGAGG_REPO)/$(LOGAGG_IMAGE) --all-tags
-    # - name: Scan the image
-      # env:
-        # TL_USER: ${{ secrets.PRISMA_ACCESSKEY }}
-        # TL_PASS: ${{ secrets.PRISMA_SECRET_ID }}
-      # run: |
-        # docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro  -e AK=${TL_USER} -e SI=${TL_PASS} -e CONTAINER=${CONTAINER_IMAGE} $CONTAINER_IMAGE_TWISTCLI       
+    - name: Build and tag the image for test scan
+      run: docker build -t ${{env.CONTAINER_IMAGE_TEST}} -t ${{github.sha}} ./test
+        
+    - name: Scan the image               
+      run: |
+        docker run --rm --group-add $(stat -f '%g' /var/run/docker.sock) -v /var/run/docker.sock:/var/run/docker.sock:ro  -e AWS_ACCESS_KEY_ID  -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN -e AWS_DEFAULT_REGION -e CONTAINER=${{env.CONTAINER_IMAGE_TEST}} ${{env.CONTAINER_IMAGE_TWISTCLI}}      
+
+  # - name: Push Image to ECR
+  # run: docker push $(LOGAGG_REPO)/$(LOGAGG_IMAGE) --all-tags

@@ -49,16 +49,16 @@ func main() {
 	printWithColor(colorGreen, "Scanning container image: "+containername+"\n")
 
 	prismasecret := getSecret(prismaSecretName, "us-east-1")
+	fmt.Println("Getting secret")
 	accesskey, secretid := getPrismaKeys(prismasecret)
 	token := getAuthToken(accesskey, secretid)
-
+	fmt.Println("Getting token")
 	twistcli := downloadTwistCli(token.Token)
-
+	fmt.Println("download cli")
 	saveTwistCli(twistcli)
-
+	fmt.Println("save cli")
 	resultstring := runTwistCli(token.Token, containername)
-	fmt.Println("")
-
+	fmt.Println("run cli")
 	scanResult := formatTwistlockResult(resultstring)
 
 	overrides := getOverridesFromAPI()
