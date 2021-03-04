@@ -2,7 +2,8 @@
 
 FROM golang:alpine
 
-RUN adduser -D -u1000 worker
+RUN rm /usr/local/go/src/crypto/tls/testdata/example-key.pem && \
+     adduser -D -u1000 worker
 
 USER worker
 
