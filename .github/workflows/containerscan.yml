@@ -37,9 +37,6 @@ jobs:
     - name: Build and tag the image for test scan
       run: docker build -t ${{env.CONTAINER_IMAGE_TEST}} -t ${{github.sha}} ./test
         
-    - name: Scan the image               
-      run: |
-        docker run --rm --group-add $(stat -c '%g' /var/run/docker.sock) -v /var/run/docker.sock:/var/run/docker.sock:ro  -e AWS_ACCESS_KEY_ID  -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN -e AWS_DEFAULT_REGION -e CONTAINER=${{env.CONTAINER_IMAGE_TEST}} ${{env.CONTAINER_IMAGE_TWISTCLI}}      
-
-  # - name: Push Image to ECR
-  # run: docker push $(LOGAGG_REPO)/$(LOGAGG_IMAGE) --all-tags
+ #   - name: Scan the image               
+ #     run: |
+ #       docker run --rm --group-add $(stat -c '%g' /var/run/docker.sock) -v /var/run/docker.sock:/var/run/docker.sock:ro  -e AWS_ACCESS_KEY_ID  -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN -e AWS_DEFAULT_REGION -e CONTAINER=${{env.CONTAINER_IMAGE_TEST}} ${{env.CONTAINER_IMAGE_TWISTCLI}}      
