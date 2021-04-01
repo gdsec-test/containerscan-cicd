@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_saveTwistCli(t *testing.T) {
@@ -15,7 +16,6 @@ func Test_saveTwistCli(t *testing.T) {
 	if _, err := os.Stat("twistcli"); os.IsNotExist(err) {
 		t.Error("file twistcli doesn't exist")
 	}
-
 }
 
 func Test_getPrismaKeys(t *testing.T) {
@@ -60,13 +60,13 @@ func Test_formatTwistlockResult(t *testing.T) {
 	result := `====DATA[
     {
         "entityInfo": {
-            "_id": "sha256:8c1c64b494fa20541be87a87d23c67c17684501c62e0684cd663c138c38cba3f",
+            "_id": "sha256:random-id",
             "type": "ciImage",
             "hostname": "",
             "scanTime": "2021-02-23T23:06:59.8185397Z",
             "files": null,
             "packageManager": true,
-            "id": "sha256:8c1c64b494fa20541be87a87d23c67c17684501c62e0684cd663c138c38cba3f",
+            "id": "sha256:random-id",
             "complianceIssues": [
                 {
                     "text": "",
@@ -134,7 +134,7 @@ func Test_formatTwistlockResult(t *testing.T) {
                     ]
                 }
             ],
-            "_id": "000000000000000000000000",
+            "_id": "random-id",
             "time": "2021-02-23T23:07:00.2349503Z",
             "pass": true,
             "version": "20.12.541"

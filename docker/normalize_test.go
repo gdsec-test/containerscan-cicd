@@ -7,13 +7,13 @@ import (
 var scanresult = `====DATA[
 {
     "entityInfo": {
-        "_id": "sha256:8c1c64b494fa20541be87a87d23c67c17684501c62e0684cd663c138c38cba3f",
+        "_id": "sha256:randomid",
         "type": "ciImage",
         "hostname": "",
         "scanTime": "2021-02-23T23:06:59.8185397Z",
         "files": null,
         "packageManager": true,
-        "id": "sha256:8c1c64b494fa20541be87a87d23c67c17684501c62e0684cd663c138c38cba3f",
+        "id": "sha256:randomid",
         "complianceIssues": [
             {
                 "text": "",
@@ -81,7 +81,7 @@ var scanresult = `====DATA[
                 ]
             }
         ],
-        "_id": "000000000000000000000000",
+        "_id": "random-id",
         "time": "2021-02-23T23:07:00.2349503Z",
         "pass": true,
         "version": "20.12.541"
@@ -91,32 +91,43 @@ var scanresult = `====DATA[
 `
 
 func Test_Normalize_withoutMatch(t *testing.T) {
-	containername = "226955763576.dkr.ecr.us-west-2.amazonaws.com/com.godaddy.security.tdagent:latest"
+	containername = "11111111111.dkr.ecr.us-west-2.amazonaws.com/some-image:latest"
 
 	formatedResult := formatTwistlockResult(scanresult)
 
 	overrides := []byte(`{
-        "rule_list":
-    [{"version": 1,	"updated": 1602700832,
-    "pattern": {"Fid": "^containerscan/us-west-2/.*/.*/curl",
-                "Cve": "^CVE-2019-14697|CVE-2020-36230"
-                },
-    "expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
-    "exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
-    "author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
-    },{"version": 1,"updated": 1605141042,
-    "pattern": {"Fid": "^containerscan/us-west-2/.*/.*/gd_prisma_compliance", 
-                "Cpl": "^414"}
-    ,"expiration": 1618444800,
-    "comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
-    "author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
-    }]}`)
+        "rule_list": [
+          {
+            "version": 1,
+            "updated": 1602700832,
+            "pattern": {
+              "Fid": "^containerscan/us-west-2/.*/.*/infected-package",
+              "Cve": "^CVE-2019-14697|CVE-2020-36230"
+            },
+            "expiration": 1618444800,
+            "comment": "Scans on GD-SOME-ACCOUNT Accounts | Standard Ports",
+            "exception_id": "random-id",
+            "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
+          },
+          {
+            "version": 1,
+            "updated": 1605141042,
+            "pattern": {
+              "Fid": "^containerscan/us-west-2/.*/.*/gd_prisma_compliance",
+              "Cpl": "^99999999"
+            },
+            "expiration": 1618444800,
+            "comment": "Scans on GD-SOME-ACCOUNT Accounts",
+            "exception_id": "random-id",
+            "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
+          }
+        ]
+      }`)
 
 	formatedResult.normalize(overrides)
 	if len(formatedResult.ComplianceIssues) == 0 {
 		t.Error("normalize failed")
 	}
-
 }
 
 func Test_Normalize_withMatch(t *testing.T) {
@@ -124,25 +135,36 @@ func Test_Normalize_withMatch(t *testing.T) {
 	formatedResult := formatTwistlockResult(scanresult)
 
 	overrides := []byte(`{
-        "rule_list":
-    [{"version": 1,	"updated": 1602700832,
-    "pattern": {"Fid": "^containerscan/us-west-2/.*/.*/musl",
-                "Cve": "^CVE-2019-14697|CVE-2020-36230"
-                },
-    "expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
-    "exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
-    "author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
-    },{"version": 1,"updated": 1605141042,
-    "pattern": {"Fid": "^containerscan/us-west-2/.*/.*/gd_prisma_compliance", 
-                "Cpl": "^41"}
-    ,"expiration": 1618444800,
-    "comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
-    "author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
-    }]}`)
+        "rule_list": [
+          {
+            "version": 1,
+            "updated": 1602700832,
+            "pattern": {
+              "Fid": "^containerscan/us-west-2/.*/.*/musl",
+              "Cve": "^CVE-2019-14697|CVE-2020-36230"
+            },
+            "expiration": 1618444800,
+            "comment": "Scans on GD-SOME-ACCOUNT Accounts | Standard Ports",
+            "exception_id": "random-id",
+            "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
+          },
+          {
+            "version": 1,
+            "updated": 1605141042,
+            "pattern": {
+              "Fid": "^containerscan/us-west-2/.*/.*/gd_prisma_compliance",
+              "Cpl": "^41"
+            },
+            "expiration": 1618444800,
+            "comment": "Scans on GD-SOME-ACCOUNT Accounts",
+            "exception_id": "random-id",
+            "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
+          }
+        ]
+      }`)
 
 	formatedResult.normalize(overrides)
 	if len(formatedResult.ComplianceIssues) != 0 {
 		t.Error("normalize failed")
 	}
-
 }

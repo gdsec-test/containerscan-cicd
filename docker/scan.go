@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/gdcorp-infosec/containerscan-cicd/docker/awspkg"
 )
 
 //ScanResult scan result with compliance and vulnerability findinds
@@ -48,7 +50,8 @@ func init() {
 func main() {
 	printWithColor(colorGreen, "Scanning container image: "+containername+"\n")
 
-	prismasecret := getSecret(prismaSecretName, "us-east-1")
+	c := awspkg.NewAWSSDKClient()
+	prismasecret := awspkg.GetSecret(c, prismaSecretName, "us-east-1")
 	fmt.Println("Getting secret")
 	accesskey, secretid := getPrismaKeys(prismasecret)
 	token := getAuthToken(accesskey, secretid)

@@ -1,27 +1,8 @@
-FROM golang:1.12.0-alpine3.9
+# FROM golang:1.12.0-alpine3.9
+# FROM 764525110978.dkr.ecr.us-east-1.amazonaws.com/alpine:latest
+FROM alpine:3.13.4
 
-# FROM golang:alpine
+USER root
 
-# RUN rm /usr/local/go/src/crypto/tls/testdata/example-key.pem && \
-     # adduser -D -u1000 worker
-
-# USER worker
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+RUN adduser -S appuser
+USER appuser

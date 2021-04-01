@@ -1,14 +1,14 @@
 package main
 
 import (
-	// "encoding/hex"
 	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
-	// "golang.org/x/crypto/blake2b"
+
+	"github.com/gdcorp-infosec/containerscan-cicd/docker/awspkg"
 )
 
 type businessRuleSet struct {
@@ -66,80 +66,25 @@ func (exc *businessException) apply(finding map[string]interface{}) bool {
 }
 
 func getOverridesFromAPI() []byte {
-	awsaccountid := getAwsAccount()
-	org := getSSMParameter("/AdminParams/Team/OrgType")
+	c := awspkg.NewAWSSDKClient()
+
+	awsaccountid := awspkg.GetAwsAccount(c)
+	org := awspkg.GetSSMParameter(c, "/AdminParams/Team/OrgType")
 
 	appid := "5vhrlp0vbb"
 	if org == "pci" {
 		appid = "5z4vnar9v4"
 	}
 	url := fmt.Sprintf("https://%s.execute-api.us-west-2.amazonaws.com/gddeploy/v1/exception?account=%s", appid, awsaccountid)
-	overrides, error := callExecuteAPI(url, "us-west-2")
+	overrides, error := awspkg.CallExecuteAPI(c, url, "us-west-2")
 
 	if error != nil {
 		fmt.Printf("Error retrieving overrides:%s\n", error.Error())
 		panic(error)
 	}
 
-	// ,"Cve": "^CVE-2018-14721|CVE-2019-20330"
-
-	// overrides = []byte(`{
-	// "rule_list":
-	// [
-	// {"version": 1,	"updated": 1602700832,
-	// "pattern": {"Id": "^containerscan/us-east-1/.*/.*/com.fasterxml.jackson.core_jackson-databind"
-	// },
-	// "expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
-	// "exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
-	// "author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
-	// },
-	// {"version": 1,	"updated": 1602700832,
-	// "pattern": {"Fid": "^containerscan/us-east-1/.*/.*/node", "Cve":"^CVE-2018-12120"
-	// },
-	// "expiration": 1618444800,"comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Standard Ports",
-	// "exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
-	// "author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
-	// },
-	// {"version": 1,"updated": 1605141042,
-	// "pattern": {
-	// "Fid": "^containerscan/us-east-1/.*/.*/gd_prisma_compliance",
-	// "Cpl": "^424"}
-	// ,"expiration": 1618444800,
-	// "comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
-	// "author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/smimani@godaddy.com"
-	// }]}`)
-
 	return overrides
-
 }
-
-////COmment out S3 call, use api
-/*
-func getOverridesFromS3() []byte {
-	awsaccountid := getAwsAccount()
-
-	fmt.Printf("aws account: %s", awsaccountid)
-	hasher, _ := blake2b.New(20, nil)
-	hasher.Write([]byte(awsaccountid))
-	hashstring := hex.EncodeToString(hasher.Sum(nil)[:])
-
-	org := getSSMParameter("/AdminParams/Team/OrgType")
-	bucket := "gd-audit-prod-cirrus-scan-params"
-	if org == "pci" {
-		bucket = "gd-audit-prod-cirrus-scan-params-p"
-	}
-
-	overrides, error := getS3Object(bucket, "exceptions/"+hashstring)
-	fmt.Printf("Retrieved overrides: %s\n", overrides)
-	if error != nil {
-		fmt.Printf("Error retrieving overrides:%s\n", error.Error())
-		panic(error)
-	}
-	//json from S3 doesn't container rule_list element at root level
-	return overrides
-
-}
-*/
 
 func (res *ScanResult) normalize(overrides []byte) {
 	// fmt.Println("in normalize")

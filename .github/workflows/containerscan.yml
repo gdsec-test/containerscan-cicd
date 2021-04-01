@@ -6,7 +6,7 @@ on:
 
 
 name: scan container images
-env:   
+env:
   CONTAINER_IMAGE_TWISTCLI: containerscan
   CONTAINER_IMAGE_TEST: 226955763576.dkr.ecr.us-east-1.amazonaws.com/testcontainer:latest
 
@@ -14,7 +14,7 @@ jobs:
   build-and-scan:
     name: Build and Scan for Vulnerabilities
     runs-on: self-hosted
-    
+
     steps:
     - name: Checkout
       uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
@@ -38,10 +38,10 @@ jobs:
 
     - name: Build and tag the image twistcli
       run: docker build -t ${{env.CONTAINER_IMAGE_TWISTCLI}} -t ${{github.sha}} ./docker
-    
+
     - name: Build and tag the image for test scan
       run: docker build -t ${{env.CONTAINER_IMAGE_TEST}} -t ${{github.sha}} ./test
-        
- #   - name: Scan the image               
- #     run: |
- #       docker run --rm --group-add $(stat -c '%g' /var/run/docker.sock) -v /var/run/docker.sock:/var/run/docker.sock:ro  -e AWS_ACCESS_KEY_ID  -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN -e AWS_DEFAULT_REGION -e CONTAINER=${{env.CONTAINER_IMAGE_TEST}} ${{env.CONTAINER_IMAGE_TWISTCLI}}      
+
+    - name: Scan the image
+      run: |
+        docker run --rm --group-add $(stat -c '%g' /var/run/docker.sock) -v /var/run/docker.sock:/var/run/docker.sock:ro  -e AWS_ACCESS_KEY_ID  -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN -e AWS_DEFAULT_REGION -e CONTAINER=${{env.CONTAINER_IMAGE_TEST}} ${{env.CONTAINER_IMAGE_TWISTCLI}}
