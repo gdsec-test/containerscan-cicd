@@ -44,6 +44,7 @@ jobs:
 
     - name: Scan the image
       run: |
+        PR_SHA=${{github.event.pull_request.head.sha}}
         docker run \
         --rm \
         --group-add $(stat -c '%g' /var/run/docker.sock) \
@@ -57,5 +58,5 @@ jobs:
         -e CONTAINER=${{env.CONTAINER_IMAGE_TEST}} \
         -e PAT=${{github.token}} \
         -e GITHUB_REPO=${{github.repository}} \
-        -e COMMIT_SHA=$([ -z ${{github.event.push.after}} ] && echo ${{github.event.pull_request.head.sha}}) \
+        -e COMMIT_SHA=${PR_SHA:-${{github.sha}}} \
         ${{env.CONTAINER_IMAGE_TWISTCLI}}
