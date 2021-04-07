@@ -42,3 +42,6 @@ func after(value string, a string) string {
 	}
 	return value[adjustedPos:len(value)]
 }
+
+// String creates pointer to string based on literal string.
+func String(v string) *string { return &v }

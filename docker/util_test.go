@@ -72,3 +72,11 @@ func Test_after(t *testing.T) {
 	}
 
 }
+
+func TestString(t *testing.T) {
+	s := "testString"
+
+	if *String(s) != s {
+		t.Error("Expected :", s, "but got :", *String(s))
+	}
+}

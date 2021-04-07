@@ -1,6 +1,7 @@
 on:
   push:
-    branches: [main]
+    branches:
+      - "main"
   pull_request:
     branches: [main]
 
@@ -35,7 +36,6 @@ jobs:
       run: |
         aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 764525110978.dkr.ecr.us-west-2.amazonaws.com
 
-
     - name: Build and tag the image twistcli
       run: docker build -t ${{env.CONTAINER_IMAGE_TWISTCLI}} -t ${{github.sha}} ./docker
 
@@ -44,4 +44,18 @@ jobs:
 
     - name: Scan the image
       run: |
-        docker run --rm --group-add $(stat -c '%g' /var/run/docker.sock) -v /var/run/docker.sock:/var/run/docker.sock:ro  -e AWS_ACCESS_KEY_ID  -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN -e AWS_DEFAULT_REGION -e CONTAINER=${{env.CONTAINER_IMAGE_TEST}} ${{env.CONTAINER_IMAGE_TWISTCLI}}
+        docker run \
+        --rm \
+        --group-add $(stat -c '%g' /var/run/docker.sock) \
+        -v /var/run/docker.sock:/var/run/docker.sock:ro \
+        -e AWS_ACCESS_KEY_ID \
+        -e AWS_SECRET_ACCESS_KEY \
+        -e AWS_SESSION_TOKEN \
+        -e AWS_DEFAULT_REGION \
+        -e TARGET_URL=https://github.com/${{github.repository}}/actions/runs/${{github.run_id}} \
+        -e GITHUB_URL=https://github.com/ \
+        -e CONTAINER=${{env.CONTAINER_IMAGE_TEST}} \
+        -e PAT=${{github.token}} \
+        -e GITHUB_REPO=${{github.repository}} \
+        -e COMMIT_SHA=$([ -z ${{github.event.push.after}} ] && echo ${{github.event.pull_request.head.sha}}) \
+        ${{env.CONTAINER_IMAGE_TWISTCLI}}

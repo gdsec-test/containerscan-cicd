@@ -2,14 +2,7 @@ FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.15-alpine-3.12
 
 USER root
 
-
-
-RUN rm /usr/local/go/src/crypto/tls/testdata/example-key.pem 
-    # && \
-    # apk add --update docker openrc && \
-    # rc-update add docker boot && \
-    # apk --no-cache add shadow && \
-    # usermod -aG docker worker
+RUN rm /usr/local/go/src/crypto/tls/testdata/example-key.pem
 
 RUN mkdir /app
 ## We copy everything in the root directory
@@ -25,21 +18,8 @@ RUN go build -o main .
 ## Our start command which kicks off
 ## our newly created binary executable
 
-RUN chmod -R a+rwxX /app 
+RUN chmod -R a+rwxX /app
 
 USER worker
 
-CMD /app/main $CONTAINER
-# CMD /app/main $AK $SI $CONTAINER
-
-
-
-
-
-
-
-
-
-
-
-
+CMD /app/main $CONTAINER $PAT $TARGET_URL $GITHUB_URL $GITHUB_REPO $COMMIT_SHA
