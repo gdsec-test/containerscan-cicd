@@ -37,8 +37,8 @@ func NewGitHubAPIClient(token, targetURL, gitHubURL, gitHubRepo, commitSHA strin
 		GitHubURL:   gitHubURL,
 		GitHubRepo:  gitHubRepo,
 		CommitSHA:   commitSHA,
-		Title:       "prod/containerScan",
-		Description: "Status for ContainerScan-CICD",
+		Title:       "ContainerScan",
+		Description: "Status for ContainerScan",
 		ctx:         context.Background(),
 	}
 	return c
