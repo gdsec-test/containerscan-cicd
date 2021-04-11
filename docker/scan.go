@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"os"
+	"runtime/debug"
 
 	"github.com/gdcorp-infosec/containerscan-cicd/docker/awspkg"
 )
@@ -32,9 +32,14 @@ var (
 	prismaSecretName = "PrismaAccessKeys"
 	prismaConsoleURL = "https://us-east1.cloud.twistlock.com/us-2-158254964"
 
-	accesskey     string
-	secretid      string
 	containername string
+	patToken      string
+	targetURL     string
+	gitHubURL     string
+	gitHubRepo    string
+	commitSHA     string
+
+	exitCode = -1
 )
 
 type token struct {
@@ -44,28 +49,66 @@ type token struct {
 func init() {
 	arg := os.Args
 	containername = arg[1]
-
+	patToken = arg[2]
+	targetURL = arg[3]
+	gitHubURL = arg[4]
+	gitHubRepo = arg[5]
+	commitSHA = arg[6]
 }
 
 func main() {
+	var ghClient GitHubClient
+
+	defer cleanUp(&ghClient)
 	printWithColor(colorGreen, "Scanning container image: "+containername+"\n")
 
-	c := awspkg.NewAWSSDKClient()
-	prismasecret := awspkg.GetSecret(c, prismaSecretName, "us-east-1")
-	fmt.Println("Getting secret")
+	ghClient = NewGitHubAPIClient(patToken, targetURL, gitHubURL, gitHubRepo, commitSHA)
+	postGitHubState(ghClient, "pending")
+
+	awsClient := awspkg.NewAWSSDKClient()
+	prismasecret := awspkg.GetSecret(awsClient, prismaSecretName, "us-east-1")
+
 	accesskey, secretid := getPrismaKeys(prismasecret)
 	token := getAuthToken(accesskey, secretid)
-	fmt.Println("Getting token")
+
 	twistcli := downloadTwistCli(token.Token)
-	fmt.Println("download cli")
+
 	saveTwistCli(twistcli)
-	fmt.Println("save cli")
+
 	resultstring := runTwistCli(token.Token, containername)
-	fmt.Println("run cli")
+
 	scanResult := formatTwistlockResult(resultstring)
 
 	overrides := getOverridesFromAPI()
 
 	scanResult.normalize(overrides)
-	scanResult.reportToCLI()
+
+	exitCode = scanResult.reportToCLI()
+}
+
+func postGitHubState(ghClient GitHubClient, state string) {
+	_, _, err := CreateRepoStatus(ghClient, state)
+
+	if err != nil {
+		printWithColor(colorRed, "Reporting "+state+" to GitHub have failed.", err)
+	}
+}
+
+func cleanUp(ghClient *GitHubClient) {
+	err := recover()
+	if err != nil {
+		// Panic found, likely an error occurred.
+		postGitHubState(*ghClient, "error")
+		printWithColor(colorRed, err, string(debug.Stack()))
+	} else {
+		if exitCode == 0 {
+			// Successful run, no volnerabilities were found in a container.
+			postGitHubState(*ghClient, "success")
+		} else {
+			// Not successful run, one or more volnerabilities were found in a container.
+			postGitHubState(*ghClient, "failure")
+		}
+	}
+
+	os.Exit(exitCode)
 }

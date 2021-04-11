@@ -2,6 +2,8 @@
 
 ContainerScanner codebase
 
+Action : https://github.com/gdcorp-actions/container-scan
+
 ## How to contribute 💻
 
 1. Install pre-commit hook.
@@ -21,7 +23,7 @@ $ source .venv/bin/activate # Activate virtual envrionment
 ```bash
 $ cd docker # Change into docker folder.
 
-./docker $ go test ./... -coverprofile coverage.out && go tool cover -html=coverage.out # Validate your code is passing unit test & covered.
+./docker $ go test ./... -coverprofile coverage.out -args some test args here && go tool cover -html=coverage.out # Validate your code is passing unit test & covered.
 ```
 
 3. Integration test.
@@ -33,9 +35,11 @@ $ cd test # Change into test folder.
 
 ./test $ okta # or whichever command you used to set AWS envs (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN)
 
-./test $ chmod +x ./test.sh # (Optional) Make test script executable.
+./test $ chmod +x test_ghe.sh test_ghc.sh # (Optional) Make test scripts executable. test_ghe = github enterprise, test_ghc = github cloud
 
-./test $ ./test.sh
+./test $ vim test_ghc.sh # Update required fields masked as <...>
+
+./test $ ./test_ghc.sh
 ```
 
 4. Commit & create PR.

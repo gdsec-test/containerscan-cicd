@@ -9,14 +9,14 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-func (res ScanResult) reportToCLI() {
+func (res ScanResult) reportToCLI() int {
 	cFound, cBlocking := res.ComplianceIssues.reportToCLI()
 	fmt.Println()
 	vFound, vBlocking := res.Vulnerabilities.reportToCLI()
 
 	if cBlocking || vBlocking {
 		printWithColor(colorRed, "\nFAILED : Blocking issue(s) reported with the Image.")
-		os.Exit(1)
+		return 1
 	} else {
 		if cFound || vFound {
 			printWithColor(colorYellow, "\nWARNING : Issue(s) reported with the Image.")
@@ -24,6 +24,7 @@ func (res ScanResult) reportToCLI() {
 			printWithColor(colorGreen, "\nSUCCESS : No issue(s) reported with the Image.")
 		}
 	}
+	return 0
 }
 
 func (comp ComplianceIssues) reportToCLI() (bool, bool) {

@@ -16,6 +16,7 @@ jobs:
         with:
           repository: gdcorp-actions/tartufo
           token: ${{ secrets.REPO_CLONE_TOKEN }} # PAT with read access to gdcorp-cp/gd-actions
+          ref: v2.1.0 # https://godaddy.slack.com/archives/C011GSS1CES/p1617653572031100
           path: tartufo # Relative to github working directory
           persist-credentials: false
       - name: Run Tartufo Scan.
@@ -37,7 +38,7 @@ jobs:
         run: |
           cd docker
           go get
-          go test ./... -coverprofile coverage.out && go tool cover -func=coverage.out
+          go test ./... -coverprofile coverage.out -args some test args here && go tool cover -func=coverage.out
       - name: Run Build
         run: |
           cd docker
