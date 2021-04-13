@@ -46,6 +46,15 @@ $ cd test # Change into test folder.
    - Make sure you've activated virtual environment; to get an access to pre-commit hook.
    - `pre-commit` installed from step 1 will be executed if you followed the instruction.
 
+5. Build and versioning
+When building new version, go to `docker/Dockerfile` and set two vars:
+`CONTAINERSCAN_VERSION` as `x.x.x` - current version to be built and pushed to Golden images ECR
+`SCAN_ENV` as `dev` or `prod` - current environmet of version to be build
+`CONTAINERSCAN_VERSION` will be used to tag current build
+If you want to make current build stable and be used in Gtihub Actions or Jenkins CICD, 
+you should go to `.varenv` file and make `stable<env>` be equal to current version in `CONTAINERSCAN_VERSION`
+In this case image will be taggedf as `stable<env>` in Golden images ECR
+
 ## CICD
 
 Self-hosted VM for Github Actions
