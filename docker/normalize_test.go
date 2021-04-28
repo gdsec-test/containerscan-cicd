@@ -104,7 +104,7 @@ func Test_Normalize_withoutMatch(t *testing.T) {
               "Fid": "^containerscan/us-west-2/.*/.*/infected-package",
               "Cve": "^CVE-2019-14697|CVE-2020-36230"
             },
-            "expiration": 1618444800,
+            "expiration": 1745774345,
             "comment": "Scans on GD-SOME-ACCOUNT Accounts | Standard Ports",
             "exception_id": "random-id",
             "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
@@ -116,7 +116,7 @@ func Test_Normalize_withoutMatch(t *testing.T) {
               "Fid": "^containerscan/us-west-2/.*/.*/gd_prisma_compliance",
               "Cpl": "^99999999"
             },
-            "expiration": 1618444800,
+            "expiration": 1745774345,
             "comment": "Scans on GD-SOME-ACCOUNT Accounts",
             "exception_id": "random-id",
             "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
@@ -143,7 +143,7 @@ func Test_Normalize_withMatch(t *testing.T) {
               "Fid": "^containerscan/us-west-2/.*/.*/musl",
               "Cve": "^CVE-2019-14697|CVE-2020-36230"
             },
-            "expiration": 1618444800,
+            "expiration": 1745774345,
             "comment": "Scans on GD-SOME-ACCOUNT Accounts | Standard Ports",
             "exception_id": "random-id",
             "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
@@ -155,7 +155,7 @@ func Test_Normalize_withMatch(t *testing.T) {
               "Fid": "^containerscan/us-west-2/.*/.*/gd_prisma_compliance",
               "Cpl": "^41"
             },
-            "expiration": 1618444800,
+            "expiration": 1745774345,
             "comment": "Scans on GD-SOME-ACCOUNT Accounts",
             "exception_id": "random-id",
             "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"

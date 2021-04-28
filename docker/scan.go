@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"runtime/debug"
+	"strings"
 
 	"github.com/gdcorp-infosec/containerscan-cicd/docker/awspkg"
 )
@@ -39,7 +40,8 @@ var (
 	gitHubRepo    string
 	commitSHA     string
 
-	exitCode = -1
+	postGithubStatus = true
+	exitCode         = -1
 )
 
 type token struct {
@@ -49,34 +51,46 @@ type token struct {
 func init() {
 	arg := os.Args
 	containername = arg[1]
+	argCount := len(os.Args)
+	if argCount < 3 || argCount > 7 || (arg[2] != "nostatus" && (arg[2] == "" || arg[3] == "" || arg[4] == "" || arg[5] == "" || arg[6] == "")) {
+		printWithColor(colorRed, "Required GitHub args not provided", "You should provide `nostatus` as 2nd arg or 5 args for GitHub status report")
+		os.Exit(exitCode)
+	}
+
 	patToken = arg[2]
 	targetURL = arg[3]
 	gitHubURL = arg[4]
 	gitHubRepo = arg[5]
 	commitSHA = arg[6]
+
+	if strings.ToLower(patToken) == "nostatus" {
+		printWithColor(colorYellow, "Running scanner without GitHub status report")
+		postGithubStatus = false
+	} else {
+		printWithColor(colorGreen, "Running scanner wit GitHub status report")
+	}
 }
 
 func main() {
-	var ghClient GitHubClient
-
-	defer cleanUp(&ghClient)
 	printWithColor(colorGreen, "Scanning container image: "+containername+"\n")
 
-	ghClient = NewGitHubAPIClient(patToken, targetURL, gitHubURL, gitHubRepo, commitSHA)
-	postGitHubState(ghClient, "pending")
+	var ghClient GitHubClient
+	if postGithubStatus {
+		ghClient = NewGitHubAPIClient(patToken, targetURL, gitHubURL, gitHubRepo, commitSHA)
+		postGitHubState(ghClient, "pending")
+		defer cleanUpAndPostGithubStatus(&ghClient)
+	}
 
 	awsClient := awspkg.NewAWSSDKClient()
 	prismasecret := awspkg.GetSecret(awsClient, prismaSecretName, "us-east-1")
 
 	accesskey, secretid := getPrismaKeys(prismasecret)
 	token := getAuthToken(accesskey, secretid)
-
 	twistcli := downloadTwistCli(token.Token)
 
 	saveTwistCli(twistcli)
 
 	resultstring := runTwistCli(token.Token, containername)
-
 	scanResult := formatTwistlockResult(resultstring)
 
 	overrides := getOverridesFromAPI()
@@ -94,7 +108,7 @@ func postGitHubState(ghClient GitHubClient, state string) {
 	}
 }
 
-func cleanUp(ghClient *GitHubClient) {
+func cleanUpAndPostGithubStatus(ghClient *GitHubClient) {
 	err := recover()
 	if err != nil {
 		// Panic found, likely an error occurred.

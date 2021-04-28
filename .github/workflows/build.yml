@@ -38,7 +38,7 @@ jobs:
         run: |
           cd docker
           go get
-          go test ./... -coverprofile coverage.out -args some test args here && go tool cover -func=coverage.out
+          go test ./... -coverprofile coverage.out -args some test args too && go tool cover -func=coverage.out
       - name: Run Build
         run: |
           cd docker
