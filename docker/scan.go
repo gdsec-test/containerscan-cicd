@@ -67,7 +67,7 @@ func init() {
 		printWithColor(colorYellow, "Running scanner without GitHub status report")
 		postGithubStatus = false
 	} else {
-		printWithColor(colorGreen, "Running scanner wit GitHub status report")
+		printWithColor(colorGreen, "Running scanner with GitHub status report")
 	}
 }
 
