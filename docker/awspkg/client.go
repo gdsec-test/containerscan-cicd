@@ -92,7 +92,6 @@ func getSession() *session.Session {
 func sessionWrapper(sess *session.Session) *session.Session {
 	if sess == nil {
 		sess, _ := session.NewSessionWithOptions(session.Options{
-			Profile: "default",
 			Config:  aws.Config{Region: aws.String("us-east-1")},
 		})
 		return sess

@@ -8,8 +8,8 @@ on:
 
 name: scan container images
 env:
-  CONTAINER_IMAGE_TWISTCLI: containerscan
-  CONTAINER_IMAGE_TEST: 226955763576.dkr.ecr.us-east-1.amazonaws.com/testcontainer:latest
+  CONTAINER_IMAGE_TWISTCLI: 123456789.dkr.ecr.us-east-1.amazonaws.com/scanner:latest
+  CONTAINER_IMAGE_TEST: 123456789.dkr.ecr.us-east-1.amazonaws.com/scanner:latest
 
 jobs:
   build-and-scan:
@@ -40,7 +40,7 @@ jobs:
       run: docker build -t ${{env.CONTAINER_IMAGE_TWISTCLI}} -t ${{github.sha}} ./docker
 
     - name: Build and tag the image for test scan
-      run: docker build -t ${{env.CONTAINER_IMAGE_TEST}} -t ${{github.sha}} ./test
+      run: docker build -t ${{env.CONTAINER_IMAGE_TEST}} ./docker
 
     - name: Scan image without posting github status
       run: |
