@@ -4,6 +4,16 @@ import (
 	"io/ioutil"
 )
 
+func GetSecretFromS3(c AWSClient, bucketName string, objectName string, region string) *string {
+	result, err := c.GetS3Object(bucketName, objectName, region)
+
+	if err != nil {
+		panic(err)
+	}
+	resultString := string(result)
+	return &resultString
+}
+
 // GetSecret retrieve aws secretmanager secret
 func GetSecret(c AWSClient, secretname string, region string) *string {
 	result, err := c.GetSecretValue(secretname, region)

@@ -2,9 +2,15 @@ on:
   push:
     branches:
       - "main"
+    paths-ignore:
+      - "sceptre/**"
+      - ".github/workflows/sceptre.yml"
+
   pull_request:
     branches: [main]
-
+    paths-ignore:
+      - "sceptre/**"
+      - ".github/workflows/sceptre.yml"
 
 name: scan container images
 env:

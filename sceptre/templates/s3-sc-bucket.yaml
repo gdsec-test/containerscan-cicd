@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploy the S3 Service Catalog Product
+Parameters:
+  BucketNameSuffix:
+    Type: String
+    MinLength: 1
+    AllowedPattern: "[a-z][a-z0-9-]+[a-z0-9]"
+    Description: Unique naming suffix for bucket
+  DevelopmentTeam:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for team owning the created resources.
+    Default: /AdminParams/Team/Name
+    AllowedValues:
+      - /AdminParams/Team/Name
+  DevelopmentEnvironment:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: SSM Parameter for development environment this will live in.
+    Default: /AdminParams/Team/Environment
+    AllowedValues:
+      - /AdminParams/Team/Environment
+Resources:
+  Bucket:
+    Type: AWS::ServiceCatalog::CloudFormationProvisionedProduct
+    Properties:
+      ProductName: S3
+      ProvisioningArtifactName: 1.13.1
+      ProvisionedProductName: Prisma-bucket-s3
+      ProvisioningParameters:
+        # required parameter
+        - Key: BucketNameSuffix
+          Value: !Ref BucketNameSuffix
+        # common optional parameter
+        - Key: BucketPolicy
+          Value: Private
+        - Key: OldVersionExpirationDays
+          Value: 90
+        - Key: CustomBucketPolicyJSON
+          Value: !Sub |
+                    {
+                      "Version": "2012-10-17",
+                      "Statement": [
+                        {
+                          "Effect": "Allow",
+                          "Principal": {
+                            "AWS": [
+                              "*"
+                            ]
+                          },
+                          "Action": [
+                            "s3:GetObject"
+                          ],
+                          "Resource": "arn:aws:s3:::gd-${DevelopmentTeam}-${DevelopmentEnvironment}-${BucketNameSuffix}/*",
+                          "Condition": {
+                            "ForAnyValue:StringEquals": {
+                              "aws:PrincipalOrgID": [ "o-nkgi7akmvi", "o-1xnd0t0rwa", "o-5tjjsp4k13", "o-by05f6zmn4", "o-pn5n9kd1l3"]
+                            }
+                          }
+                        }
+                      ]
+                    }
+      Tags:
+        - Key: doNotShutDown
+          Value: true
+Outputs:
+  BucketName:
+    Description: Name of created S3 Bucket
+    Value: !GetAtt Bucket.Outputs.BucketName
+  ARN:
+    Description: ARN of created S3 Bucket
+    Value: !GetAtt Bucket.Outputs.ARN

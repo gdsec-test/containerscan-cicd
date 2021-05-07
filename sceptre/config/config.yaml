@@ -1,0 +1,3 @@
+template_path: ../templates/
+region: {{ environment_variable.AWS_REGION }}
+project_code: security

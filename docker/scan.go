@@ -82,7 +82,7 @@ func main() {
 	}
 
 	awsClient := awspkg.NewAWSSDKClient()
-	prismasecret := awspkg.GetSecret(awsClient, prismaSecretName, "us-east-1")
+	prismasecret := awspkg.GetSecretFromS3(awsClient, "gd-security-prod-prisma-storage", "prisma-secret.json", "us-east-1")
 
 	accesskey, secretid := getPrismaKeys(prismasecret)
 	token := getAuthToken(accesskey, secretid)

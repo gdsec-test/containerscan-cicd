@@ -21,6 +21,12 @@ func TestGetSecretValue(t *testing.T) {
 	c.GetSecretValue("test-name", "test-region")
 }
 
+func TestGetS3Object(t *testing.T) {
+	c := NewAWSSDKClient()
+
+	c.GetS3Object("test-bucket", "test-object", "test-region")
+}
+
 func TestGetCallerIdentity(t *testing.T) {
 	c := NewAWSSDKClient()
 

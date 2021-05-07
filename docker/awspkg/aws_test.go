@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"testing"
-
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -66,6 +66,17 @@ func (c *MockAWSClient) GetSecretValue(region string, secretName string) (*secre
 	return &secretsmanager.GetSecretValueOutput{SecretString: &str}, err
 }
 
+func (c *MockAWSClient) GetS3Object(bucketName string, objectName string, region string) ([]byte, error) {
+	var err error
+
+	if c.shouldError {
+		err = errors.New("GetS3Object ERRORED")
+	}
+	buff := &aws.WriteAtBuffer{}
+
+	return buff.Bytes(), err
+}
+
 func NewMockAWSClient(shouldError bool) AWSClient {
 	c := &MockAWSClient{
 		shouldError,
@@ -95,6 +106,26 @@ func TestGetSecret_ErrorPath(t *testing.T) {
 
 	GetSecret(c, secretName, region)
 }
+
+func TestGetS3Object_HappyPath(t *testing.T) {
+	c := NewMockAWSClient(false)
+	bucketName := "test bucket"
+	objectName := "test object"
+	region := "us-east-1"
+
+	GetSecretFromS3(c, bucketName, objectName, region)
+}
+
+func TestGetS3Object_ErrorPath(t *testing.T) {
+	defer assertPanic(t)
+	c := NewMockAWSClient(true)
+	bucketName := "test bucket"
+	objectName := "test object"
+	region := "us-east-1"
+	
+	GetSecretFromS3(c, bucketName, objectName, region)
+}
+
 
 func TestCallExecuteAPI_HappyPath(t *testing.T) {
 	c := NewMockAWSClient(false)

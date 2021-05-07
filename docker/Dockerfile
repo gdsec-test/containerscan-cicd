@@ -11,6 +11,7 @@ RUN mkdir /app
 ## We copy everything in the root directory
 ## into our /app directory
 ADD . /app
+
 ## We specify that we now wish to execute
 ## any further commands inside our /app
 ## directory

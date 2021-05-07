@@ -3,13 +3,14 @@ package awspkg
 import (
 	"net/http"
 	"time"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 type AWSClient interface {
@@ -18,6 +19,7 @@ type AWSClient interface {
 	GetCallerIdentity() (*sts.GetCallerIdentityOutput, error)
 	GetParameter(name string) (*ssm.GetParameterOutput, error)
 	ExecuteRequest(url string, region string) (*http.Response, error)
+	GetS3Object(bucketName string, objectName string, region string) ([]byte, error)
 }
 
 type SDKAWSClient struct{}
@@ -33,6 +35,18 @@ func (c *SDKAWSClient) GetSecretValue(secretName string, region string) (*secret
 	input := getSecretValueInput(secretName)
 
 	return svc.GetSecretValue(input)
+}
+
+func (c *SDKAWSClient) GetS3Object(bucketName string, objectName string, region string) ([]byte, error) {
+	sess := c.newSession()
+	downloader := s3manager.NewDownloader(sess)
+	buff := &aws.WriteAtBuffer{}
+	// Write the contents of S3 Object to the file
+	_, err := downloader.Download(buff, &s3.GetObjectInput{
+			Bucket: aws.String(bucketName),
+			Key:    aws.String(objectName),
+	})
+	return buff.Bytes(), err
 }
 
 func (c *SDKAWSClient) GetCallerIdentity() (*sts.GetCallerIdentityOutput, error) {
