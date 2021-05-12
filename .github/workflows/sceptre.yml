@@ -52,13 +52,14 @@ jobs:
           role-duration-seconds: 3600
           aws-region: us-east-1
 
-      - name: Deploy/Update ECR sceptre deployment
-        working-directory: ./sceptre
-        run: |
-          sceptre launch -y s3-bucket-prisma.yaml
+      ## updating S3 bucket is not necessary and takes up to few days to take effect
+      # - name: Deploy/Update ECR sceptre deployment
+      #   working-directory: ./sceptre
+      #   run: |
+      #     sceptre launch -y s3-bucket-scanner.yaml
 
       - name: Update with new Prisma Secret
         run: |
           jq -n '{"prismaAccessKeyId": "${{ secrets.PRISMA_ACCESS_KEY_ID }}", "prismaSecretKey": "${{ secrets.PRISMA_SECRET_KEY }}"}' > prisma-secret.json
-          aws s3api put-object --key prisma-secret.json --body prisma-secret.json --bucket gd-security-prod-containerscanner-storage
+          aws s3api put-object --key prisma-secret.json --body prisma-secret.json --bucket gd-security-prod-container-scanner-storage
           rm -irf prisma-secret.json

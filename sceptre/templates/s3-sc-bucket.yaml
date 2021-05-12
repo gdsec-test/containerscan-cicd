@@ -24,7 +24,7 @@ Resources:
     Properties:
       ProductName: S3
       ProvisioningArtifactName: 1.13.1
-      ProvisionedProductName: Prisma-bucket-s3
+      ProvisionedProductName: container-scan-bucket-s3
       ProvisioningParameters:
         # required parameter
         - Key: BucketNameSuffix
