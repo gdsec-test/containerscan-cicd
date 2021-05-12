@@ -1,4 +1,4 @@
 # This is the configuration for the S3 bucket containing Prisma credentials accessible by all Consumers
 template_path: s3-sc-bucket.yaml
 parameters:
-  BucketNameSuffix: prisma-storage
+  BucketNameSuffix: containerscanner-storage

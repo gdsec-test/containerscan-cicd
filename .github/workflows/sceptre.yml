@@ -60,5 +60,5 @@ jobs:
       - name: Update with new Prisma Secret
         run: |
           jq -n '{"prismaAccessKeyId": "${{ secrets.PRISMA_ACCESS_KEY_ID }}", "prismaSecretKey": "${{ secrets.PRISMA_SECRET_KEY }}"}' > prisma-secret.json
-          aws s3api put-object --key prisma-secret.json --body prisma-secret.json --bucket gd-security-prod-prisma-storage
+          aws s3api put-object --key prisma-secret.json --body prisma-secret.json --bucket gd-security-prod-containerscanner-storage
           rm -irf prisma-secret.json
