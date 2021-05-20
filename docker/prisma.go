@@ -3,12 +3,12 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/cenkalti/backoff/v4"
 	"io/ioutil"
 	"net/http"
 	"os/exec"
 	"strings"
 	"time"
-	"github.com/cenkalti/backoff/v4"
 )
 
 type API struct {
@@ -36,7 +36,7 @@ func formatTwistlockResult(resultstring string) ScanResult {
 	return s[0].EntityInfo
 }
 
-func getAuthToken(username string, password string) token {
+func createAuthTokenRequest(username string, password string) *API {
 	url := prismaConsoleURL + "/api/v1/authenticate"
 	payload, _ := json.Marshal(map[string]string{
 		"username": username,
@@ -51,6 +51,12 @@ func getAuthToken(username string, password string) token {
 		payload:   payload,
 		header:    map[string]string{"content-type": "application/json"},
 	}
+	return &api
+
+}
+
+func getAuthToken(username string, password string) token {
+	api := createAuthTokenRequest(username, password)
 	tokenresult := api.getAPIResponse()
 	var token token
 	json.Unmarshal(tokenresult, &token)
@@ -117,11 +123,8 @@ func saveTwistCli(twistcli []byte) {
 }
 
 func runTwistCli(token string, container string) string {
-	cmd := exec.Command("/bin/sh", "-c", "./twistcli images scan --details --address "+prismaConsoleURL+" --token "+token+" --ci "+container)
-	return runOSCommandWithOutput(cmd)
-}
-
-func runOSCommandWithOutput(cmd *exec.Cmd) string {
+	commandline := "./twistcli images scan --details --address " + prismaConsoleURL + " --token " + token + " --ci " + container
+	cmd := exec.Command("/bin/sh", "-c", commandline)
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer

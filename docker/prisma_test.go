@@ -1,12 +1,11 @@
 package main
 
 import (
-	"os"
-	"os/exec"
-	"strings"
-	"testing"
-
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"os"
+	"testing"
 )
 
 func Test_saveTwistCli(t *testing.T) {
@@ -40,19 +39,6 @@ func Test_getPrismaKeys(t *testing.T) {
 
 	assert.Panics(t, func() { getPrismaKeys(&prismaSecret) }, " Didn't panic reading from invalid prisma secret")
 
-}
-
-func Test_runOSCommandWithOutput(t *testing.T) {
-	cmd := exec.Command("/bin/sh", "-c", "echo test")
-
-	result := runOSCommandWithOutput(cmd)
-
-	if strings.TrimSpace(result) != "test" {
-		t.Error("run command failed")
-	}
-
-	cmd = exec.Command("/bin/aaa", "-c", "echo test")
-	assert.Panics(t, func() { runOSCommandWithOutput(cmd) }, "The code did not panic")
 }
 
 func Test_formatTwistlockResult(t *testing.T) {
@@ -148,7 +134,56 @@ func Test_formatTwistlockResult(t *testing.T) {
 		t.Error("format error")
 	}
 
-	result = "test"
+}
+
+func Test_formatTwistlockResult_panic(t *testing.T) {
+
+	result := "====DATAabc{}"
 	assert.Panics(t, func() { formatTwistlockResult(result) }, "Didn't panic reading from invalid prisma result")
+
+}
+
+func Test_createAuthTokenRequest(t *testing.T) {
+
+	apiInstance := createAuthTokenRequest("aaa", "bbb")
+	if apiInstance == nil {
+		t.Error("api creation error")
+	}
+}
+
+func Test_getAPIResponse_panic(t *testing.T) {
+
+	url := "http://www.randomfakeaaaaa.com"
+	payload, _ := json.Marshal(map[string]string{
+		"v1": "aaa",
+		"v2": "bbb",
+	})
+
+	api := API{
+		Client:    &http.Client{},
+		url:       url,
+		authToken: "",
+		method:    "POST",
+		payload:   payload,
+		header:    map[string]string{"content-type": "application/json", "test": "test"},
+	}
+
+	assert.Panics(t, func() { api.getAPIResponse() }, "Didn't panic reading from invalid url")
+
+}
+
+func Test_getAPIResponse_OK(t *testing.T) {
+	client := &http.Client{}
+	api := API{client, "http://www.google.com", "AAAAA", "GET", nil, map[string]string{"content-type": "application/json"}}
+	body := api.getAPIResponse()
+
+	if body == nil {
+		t.Error("API call error")
+	}
+	myString := string(body)
+
+	if len(myString) == 0 {
+		t.Error("API call error")
+	}
 
 }

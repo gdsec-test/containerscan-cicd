@@ -58,15 +58,15 @@ func init() {
 	}
 
 	patToken = arg[2]
-	targetURL = arg[3]
-	gitHubURL = arg[4]
-	gitHubRepo = arg[5]
-	commitSHA = arg[6]
 
 	if strings.ToLower(patToken) == "nostatus" {
 		printWithColor(colorYellow, "Running scanner without GitHub status report")
 		postGithubStatus = false
 	} else {
+		targetURL = arg[3]
+		gitHubURL = arg[4]
+		gitHubRepo = arg[5]
+		commitSHA = arg[6]
 		printWithColor(colorGreen, "Running scanner with GitHub status report")
 	}
 }

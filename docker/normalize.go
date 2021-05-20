@@ -26,7 +26,6 @@ func (exc *businessException) apply(finding map[string]interface{}) bool {
 	//if expired, pass
 	if exc.Expiration > 0 {
 		if time.Now().UTC().Unix() > exc.Expiration {
-			fmt.Println("expired rule")
 			return false
 		}
 	}
@@ -64,18 +63,27 @@ func (exc *businessException) apply(finding map[string]interface{}) bool {
 	}
 	return false
 }
+func getAwsUrl(org_type string, awsaccountid string) string {
+	aws_host := ""
+
+	if org_type == "non-pci" {
+		aws_host = "api.cirrusscan.gdcorp.tools"
+	} else if org_type == "pci" {
+		aws_host = "api-p.cirrusscan.gdcorp.tools"
+	} else if org_type == "registry" {
+		aws_host = "api-r.cirrusscan.gdcorp.tools"
+	} else {
+		panic("Unrecognized organization type: " + org_type)
+	}
+	url := fmt.Sprintf("https://%s/v1/exception?account=%s", aws_host, awsaccountid)
+	return url
+}
 
 func getOverridesFromAPI() []byte {
 	c := awspkg.NewAWSSDKClient()
-
 	awsaccountid := awspkg.GetAwsAccount(c)
-	org := awspkg.GetSSMParameter(c, "/AdminParams/Team/OrgType")
-
-	appid := "5vhrlp0vbb"
-	if org == "pci" {
-		appid = "5z4vnar9v4"
-	}
-	url := fmt.Sprintf("https://%s.execute-api.us-west-2.amazonaws.com/gddeploy/v1/exception?account=%s", appid, awsaccountid)
+	org_type := awspkg.GetSSMParameter(c, "/AdminParams/Team/OrgType")
+	url := getAwsUrl(org_type, awsaccountid)
 	overrides, error := awspkg.CallExecuteAPI(c, url, "us-west-2")
 
 	if error != nil {

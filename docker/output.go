@@ -11,7 +11,7 @@ import (
 
 func (res ScanResult) reportToCLI() int {
 	cFound, cBlocking := res.ComplianceIssues.reportToCLI()
-	fmt.Println()
+
 	vFound, vBlocking := res.Vulnerabilities.reportToCLI()
 
 	if cBlocking || vBlocking {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -104,7 +105,7 @@ func Test_Normalize_withoutMatch(t *testing.T) {
               "Fid": "^containerscan/us-west-2/.*/.*/infected-package",
               "Cve": "^CVE-2019-14697|CVE-2020-36230"
             },
-            "expiration": 1745774345,
+            "expiration": 1845774345,
             "comment": "Scans on GD-SOME-ACCOUNT Accounts | Standard Ports",
             "exception_id": "random-id",
             "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
@@ -116,7 +117,7 @@ func Test_Normalize_withoutMatch(t *testing.T) {
               "Fid": "^containerscan/us-west-2/.*/.*/gd_prisma_compliance",
               "Cpl": "^99999999"
             },
-            "expiration": 1745774345,
+            "expiration": 1845774345,
             "comment": "Scans on GD-SOME-ACCOUNT Accounts",
             "exception_id": "random-id",
             "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
@@ -130,7 +131,7 @@ func Test_Normalize_withoutMatch(t *testing.T) {
 	}
 }
 
-func Test_Normalize_withMatch(t *testing.T) {
+func Test_Normalize_match_allrules(t *testing.T) {
 
 	formatedResult := formatTwistlockResult(scanresult)
 
@@ -143,7 +144,7 @@ func Test_Normalize_withMatch(t *testing.T) {
               "Fid": "^containerscan/us-west-2/.*/.*/musl",
               "Cve": "^CVE-2019-14697|CVE-2020-36230"
             },
-            "expiration": 1745774345,
+            "expiration": 1845774345,
             "comment": "Scans on GD-SOME-ACCOUNT Accounts | Standard Ports",
             "exception_id": "random-id",
             "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
@@ -155,7 +156,7 @@ func Test_Normalize_withMatch(t *testing.T) {
               "Fid": "^containerscan/us-west-2/.*/.*/gd_prisma_compliance",
               "Cpl": "^41"
             },
-            "expiration": 1745774345,
+            "expiration": 1845774345,
             "comment": "Scans on GD-SOME-ACCOUNT Accounts",
             "exception_id": "random-id",
             "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
@@ -167,4 +168,172 @@ func Test_Normalize_withMatch(t *testing.T) {
 	if len(formatedResult.ComplianceIssues) != 0 {
 		t.Error("normalize failed")
 	}
+}
+
+func Test_apply_partial_match(t *testing.T) {
+	overrides := []byte(`{
+    "rule_list": [
+      {
+        "version": 1,
+        "updated": 1602700832,
+        "pattern": {
+          "Fid": "^containerscan/us-west-2/.*/.*/musl",
+          "Cve": "^CVE-123"
+        },
+        "expiration": 1845774345,
+        "comment": "Scans on GD-SOME-ACCOUNT Accounts | Standard Ports",
+        "exception_id": "random-id",
+        "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
+      }
+      ]
+  }`)
+
+	formatedResult := formatTwistlockResult(scanresult)
+
+	formatedResult.normalize(overrides)
+	if len(formatedResult.Vulnerabilities) != 1 {
+		t.Error("Apply failed")
+	}
+
+}
+
+func Test_apply_nomatch_2(t *testing.T) {
+
+	overrides := []byte(`{
+    "rule_list": [
+      {
+        "version": 1,
+        "updated": 1602700832,
+        "pattern": {
+          "Fid": "^aaa/us-west-2/.*/.*/aaa",
+          "Cve": "^CVE-123"
+        },
+        "expiration": 1845774345,
+        "comment": "Scans on GD-SOME-ACCOUNT Accounts | Standard Ports",
+        "exception_id": "random-id",
+        "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
+      }
+      ]
+  }`)
+
+	formatedResult := formatTwistlockResult(scanresult)
+
+	formatedResult.normalize(overrides)
+	if len(formatedResult.Vulnerabilities) != 1 {
+		t.Error("Apply failed")
+	}
+}
+
+func Test_apply_no_overrides(t *testing.T) {
+
+	overrides := []byte(`{
+    "rule_list": [  
+      ]
+  }`)
+
+	formatedResult := formatTwistlockResult(scanresult)
+
+	formatedResult.normalize(overrides)
+	if len(formatedResult.Vulnerabilities) != 1 {
+		t.Error("Apply failed")
+	}
+}
+
+func Test_apply_expired_rule(t *testing.T) {
+	overrides := []byte(`{
+    "rule_list": [
+      {
+        "version": 1,
+        "updated": 1602700832,
+        "pattern": {"Fid": "^containerscan/us-west-2/.*/.*/musl",
+          "Cve": "^CVE-2019-14697|CVE-2020-36230" },
+        "expiration": 1145774345,
+        "comment": "Scans on GD-SOME-ACCOUNT Accounts | Standard Ports",
+        "exception_id": "random-id",
+        "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
+      }
+      ]
+  }`)
+
+	formatedResult := formatTwistlockResult(scanresult)
+	formatedResult.normalize(overrides)
+	if len(formatedResult.Vulnerabilities) != 1 {
+		t.Error("Apply failed")
+	}
+
+}
+
+func Test_apply_Zero_length_pattern(t *testing.T) {
+	overrides := []byte(`{
+    "rule_list": [
+      {
+        "version": 1,
+        "updated": 1602700832,
+        "pattern": {"aaa": "","bbb": ""},
+        "expiration": 1945774345,
+        "comment": "Scans on GD-SOME-ACCOUNT Accounts | Standard Ports",
+        "exception_id": "random-id",
+        "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
+      }
+      ]
+  }`)
+	formatedResult := formatTwistlockResult(scanresult)
+	formatedResult.normalize(overrides)
+	if len(formatedResult.Vulnerabilities) != 1 {
+		t.Error("Apply failed")
+	}
+}
+
+func Test_apply_no_matching_attribute(t *testing.T) {
+	overrides := []byte(`{
+    "rule_list": [
+      {
+        "version": 1,
+        "updated": 1602700832,
+        "pattern": {"aaa": "containerscan/"},
+        "expiration": 1945774345,
+        "comment": "Scans on GD-SOME-ACCOUNT Accounts | Standard Ports",
+        "exception_id": "random-id",
+        "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
+      }
+      ]
+  }`)
+	formatedResult := formatTwistlockResult(scanresult)
+	formatedResult.normalize(overrides)
+	if len(formatedResult.Vulnerabilities) != 1 {
+		t.Error("Apply failed")
+	}
+}
+
+func Test_getAwsUrl_nonpci(t *testing.T) {
+	org_type := "non-pci"
+	awsaccountid := "123456"
+	result := getAwsUrl(org_type, awsaccountid)
+	if result != "https://api.cirrusscan.gdcorp.tools/v1/exception?account=123456" {
+		t.Error("Get aws url failed")
+	}
+}
+
+func Test_getAwsUrl_pci(t *testing.T) {
+	org_type := "pci"
+	awsaccountid := "123456"
+	result := getAwsUrl(org_type, awsaccountid)
+	if result != "https://api-p.cirrusscan.gdcorp.tools/v1/exception?account=123456" {
+		t.Error("Get aws url failed")
+	}
+}
+func Test_getAwsUrl_registry(t *testing.T) {
+	org_type := "registry"
+	awsaccountid := "123456"
+	result := getAwsUrl(org_type, awsaccountid)
+	if result != "https://api-r.cirrusscan.gdcorp.tools/v1/exception?account=123456" {
+		t.Error("Get aws url failed")
+	}
+}
+
+func Test_getAwsUrl_panic(t *testing.T) {
+	org_type := "random"
+	awsaccountid := "123456"
+
+	assert.Panics(t, func() { getAwsUrl(org_type, awsaccountid) }, "Didn't panic with bad org_type")
 }
