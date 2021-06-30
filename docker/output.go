@@ -1,19 +1,18 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/coryb/sorty"
-	"github.com/olekukonko/tablewriter"
 	"os"
 	"strconv"
-	"time"
+
+	"github.com/coryb/sorty"
+	"github.com/olekukonko/tablewriter"
 )
 
-func (res ScanResult) reportToCLI(outputFormat string) int {
-	cFound, cBlocking := res.ComplianceIssues.reportToCLI(outputFormat)
+func (res ScanResult) reportToCLI() int {
+	cFound, cBlocking := res.ComplianceIssues.reportToCLI()
 
-	vFound, vBlocking := res.Vulnerabilities.reportToCLI(outputFormat)
+	vFound, vBlocking := res.Vulnerabilities.reportToCLI()
 
 	if cBlocking || vBlocking {
 		printWithColor(colorRed, "\nFAILED : Blocking issue(s) reported with the Image.")
@@ -28,57 +27,48 @@ func (res ScanResult) reportToCLI(outputFormat string) int {
 	return 0
 }
 
-func (comp ComplianceIssues) reportToCLI(outputFormat string) (bool, bool) {
+func (comp ComplianceIssues) reportToCLI() (bool, bool) {
 	if len(comp) == 0 {
 		return false, false
 	}
-	blocking := false
+
 	printWithColor(colorRed, "Compliance Issues :")
-	filteredIssues := make([]map[string]interface{}, 0)
+
 	table := tablewriter.NewWriter(os.Stdout)
-	if outputFormat != "json" {
-		table.SetHeader([]string{"Id", "Severity", "Title", "Cause"})
-		table.SetRowLine(true)
-		table.SetRowSeparator("-")
-		table.SetHeaderColor(
-			tablewriter.Colors{tablewriter.Bold},
-			tablewriter.Colors{tablewriter.Bold},
-			tablewriter.Colors{tablewriter.Bold},
-			tablewriter.Colors{tablewriter.Bold},
-		)
-	}
+	table.SetHeader([]string{"Id", "Severity", "Title"})
+	table.SetRowLine(true)
+	table.SetRowSeparator("-")
+	table.SetHeaderColor(
+		tablewriter.Colors{tablewriter.Bold},
+		tablewriter.Colors{tablewriter.Bold},
+		tablewriter.Colors{tablewriter.Bold},
+		// tablewriter.Colors{tablewriter.Bold},
+		// tablewriter.Colors{tablewriter.Bold}
+	)
+	blocking := false
 	for _, c := range comp {
+		// sup := ""
+		// if c["SUPPRESS"] != nil {
+		// sup = "SUPPRESS"
+		// }
 		if c["block"] != nil {
 			blocking = true
 		}
-		if outputFormat == "json" {
-			filteredIssues = append(filteredIssues, map[string]interface{}{
-				"Id":       c["cpl"].(string),
-				"Severity": c["severity"].(string),
-				"Title":    c["title"].(string),
-				"Cause":    c["cause"].(string),
-			})
-		} else {
-			table.Append([]string{
-				c["cpl"].(string),
-				c["severity"].(string),
-				c["title"].(string),
-				c["cause"].(string),
-			})
-		}
+		table.Append([]string{
+			c["cpl"].(string),
+			c["severity"].(string),
+			c["title"].(string),
+			// c["type"].(string),
+			// sup,
+		})
 	}
 
-	if outputFormat == "json" {
-		json, _ := json.MarshalIndent(filteredIssues, "", "  ")
-		fmt.Println(string(json))
-	} else {
-		table.Render()
-	}
+	table.Render()
 
 	return true, blocking
 }
 
-func (vuln Vulnerabilities) reportToCLI(outputFormat string) (bool, bool) {
+func (vuln Vulnerabilities) reportToCLI() (bool, bool) {
 	if len(vuln) == 0 {
 		return false, false
 	}
@@ -92,68 +82,53 @@ func (vuln Vulnerabilities) reportToCLI(outputFormat string) (bool, bool) {
 
 	printWithColor(colorRed, "Vulnerability Issues :")
 	blocking := false
-
-	filteredIssues := make([]map[string]interface{}, 0)
 	table := tablewriter.NewWriter(os.Stdout)
-	if outputFormat != "json" {
-		table.SetHeader([]string{
-			"CVE",
-			"CVSS",
-			"Severity",
-			"Package Name",
-			"Package Version",
-			"Status",
-			"Fixed On",
-			"Link",
-		})
-		table.SetRowLine(true)
-		table.SetRowSeparator("-")
-		table.SetHeaderColor(
-			tablewriter.Colors{tablewriter.Bold},
-			tablewriter.Colors{tablewriter.Bold},
-			tablewriter.Colors{tablewriter.Bold},
-			tablewriter.Colors{tablewriter.Bold},
-			tablewriter.Colors{tablewriter.Bold},
-			tablewriter.Colors{tablewriter.Bold},
-			tablewriter.Colors{tablewriter.Bold},
-			tablewriter.Colors{tablewriter.Bold})
-	}
+	table.SetHeader([]string{
+		"CVE",
+		"CVSS",
+		"Severity",
+		"Status",
+		"Package Name",
+		"Package Version",
+		// "Description",
+		// "Type",
+		"Link",
+		// "SUPPRESS",
+	})
+	table.SetRowLine(true)
+	table.SetRowSeparator("-")
+	table.SetHeaderColor(
+		tablewriter.Colors{tablewriter.Bold},
+		tablewriter.Colors{tablewriter.Bold},
+		tablewriter.Colors{tablewriter.Bold},
+		tablewriter.Colors{tablewriter.Bold},
+		tablewriter.Colors{tablewriter.Bold},
+		tablewriter.Colors{tablewriter.Bold},
+		// tablewriter.Colors{tablewriter.Bold},
+		// tablewriter.Colors{tablewriter.Bold},
+		tablewriter.Colors{tablewriter.Bold})
 
 	for _, v := range vuln {
+		// sup := ""
+		// if v["SUPPRESS"] != nil {
+		// sup = "SUPPRESS"
+		// }
 		if v["block"] != nil {
 			blocking = true
 		}
-		if outputFormat == "json" {
-			filteredIssues = append(filteredIssues, map[string]interface{}{
-				"CVE":             v["cve"].(string),
-				"CVSS":            strconv.FormatFloat(v["cvss"].(float64), 'f', 2, 64),
-				"Severity":        v["severity"].(string),
-				"Package Name":    v["packageName"].(string),
-				"Package Version": v["packageVersion"].(string),
-				"Status":          v["status"].(string),
-				"Fixed On":        time.Unix(int64(v["fixDate"].(float64)), 0).Format(time.RFC822),
-				"Link":            "https://web.nvd.nist.gov/view/vuln/detail?vulnId=" + v["cve"].(string),
-			})
-		} else {
-			table.Append([]string{
-				v["cve"].(string),
-				strconv.FormatFloat(v["cvss"].(float64), 'f', 2, 64),
-				v["severity"].(string),
-				v["packageName"].(string),
-				v["packageVersion"].(string),
-				v["status"].(string),
-				time.Unix(int64(v["fixDate"].(float64)), 0).Format(time.RFC822),
-				"https://web.nvd.nist.gov/view/vuln/detail?vulnId=" + v["cve"].(string),
-			})
-		}
+		table.Append([]string{
+			v["cve"].(string),
+			strconv.FormatFloat(v["cvss"].(float64), 'f', 2, 64),
+			v["severity"].(string),
+			v["status"].(string),
+			v["packageName"].(string),
+			v["packageVersion"].(string),
+			// v["description"].(string),
+			"https://web.nvd.nist.gov/view/vuln/detail?vulnId=" + v["cve"].(string),
+		})
 	}
 
-	if outputFormat == "json" {
-		json, _ := json.MarshalIndent(filteredIssues, "", "  ")
-		fmt.Println(string(json))
-	} else {
-		table.Render()
-	}
+	table.Render()
 
 	return true, blocking
 }

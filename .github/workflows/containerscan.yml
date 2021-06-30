@@ -16,7 +16,6 @@ name: scan container images
 env:
   CONTAINER_IMAGE_TWISTCLI: 123456789.dkr.ecr.us-east-1.amazonaws.com/scanner:latest
   CONTAINER_IMAGE_TEST: 123456789.dkr.ecr.us-east-1.amazonaws.com/scanner:latest
-  CONTAINER_BAD_IMAGE_TEST: 123456789.dkr.ecr.us-east-1.amazonaws.com/bad:latest
 
 jobs:
   build-and-scan:
@@ -49,7 +48,22 @@ jobs:
     - name: Build and tag the image for test scan
       run: docker build -t ${{env.CONTAINER_IMAGE_TEST}} ./docker
 
-    - name: Scan self image
+    - name: Scan image without posting github status
+      run: |
+        PR_SHA=${{github.event.pull_request.head.sha}}
+        docker run \
+        --rm \
+        --group-add $(stat -c '%g' /var/run/docker.sock) \
+        -v /var/run/docker.sock:/var/run/docker.sock:ro \
+        -e AWS_ACCESS_KEY_ID \
+        -e AWS_SECRET_ACCESS_KEY \
+        -e AWS_SESSION_TOKEN \
+        -e AWS_DEFAULT_REGION \
+        -e SCANNER_STATUS=nostatus \
+        -e CONTAINER=${{env.CONTAINER_IMAGE_TEST}} \
+        ${{env.CONTAINER_IMAGE_TWISTCLI}}
+              
+    - name: Scan the image
       run: |
         PR_SHA=${{github.event.pull_request.head.sha}}
         docker run \
@@ -66,63 +80,4 @@ jobs:
         -e PAT=${{github.token}} \
         -e GITHUB_REPO=${{github.repository}} \
         -e COMMIT_SHA=${PR_SHA:-${{github.sha}}} \
-        ${{env.CONTAINER_IMAGE_TWISTCLI}}
-
-    - name: Build and tag vulnerable image for test scan
-      run: docker build -t ${{env.CONTAINER_BAD_IMAGE_TEST}} ./test
-
-    - name: Scan bad image
-      continue-on-error: true
-      run: |
-        PR_SHA=${{github.event.pull_request.head.sha}}
-        docker run \
-        --rm \
-        --group-add $(stat -c '%g' /var/run/docker.sock) \
-        -v /var/run/docker.sock:/var/run/docker.sock:ro \
-        -e AWS_ACCESS_KEY_ID \
-        -e AWS_SECRET_ACCESS_KEY \
-        -e AWS_SESSION_TOKEN \
-        -e AWS_DEFAULT_REGION \
-        -e TARGET_URL=https://github.com/${{github.repository}}/actions/runs/${{github.run_id}} \
-        -e GITHUB_URL=https://github.com/ \
-        -e CONTAINER=${{env.CONTAINER_BAD_IMAGE_TEST}} \
-        -e PAT=${{github.token}} \
-        -e GITHUB_REPO=${{github.repository}} \
-        -e COMMIT_SHA=${PR_SHA:-${{github.sha}}} \
-        ${{env.CONTAINER_IMAGE_TWISTCLI}}
-
-    - name: Scan bad image without posting github status
-      continue-on-error: true
-      run: |
-        docker run \
-        --rm \
-        --group-add $(stat -c '%g' /var/run/docker.sock) \
-        -v /var/run/docker.sock:/var/run/docker.sock:ro \
-        -e AWS_ACCESS_KEY_ID \
-        -e AWS_SECRET_ACCESS_KEY \
-        -e AWS_SESSION_TOKEN \
-        -e AWS_DEFAULT_REGION \
-        -e SCANNER_STATUS=nostatus \
-        -e CONTAINER=${{env.CONTAINER_BAD_IMAGE_TEST}} \
-        ${{env.CONTAINER_IMAGE_TWISTCLI}}
-
-    - name: Scan bad image with JSON output
-      continue-on-error: true
-      run: |
-        PR_SHA=${{github.event.pull_request.head.sha}}
-        docker run \
-        --rm \
-        --group-add $(stat -c '%g' /var/run/docker.sock) \
-        -v /var/run/docker.sock:/var/run/docker.sock:ro \
-        -e AWS_ACCESS_KEY_ID \
-        -e AWS_SECRET_ACCESS_KEY \
-        -e AWS_SESSION_TOKEN \
-        -e AWS_DEFAULT_REGION \
-        -e TARGET_URL=https://github.com/${{github.repository}}/actions/runs/${{github.run_id}} \
-        -e GITHUB_URL=https://github.com/ \
-        -e CONTAINER=${{env.CONTAINER_BAD_IMAGE_TEST}} \
-        -e PAT=${{github.token}} \
-        -e GITHUB_REPO=${{github.repository}} \
-        -e COMMIT_SHA=${PR_SHA:-${{github.sha}}} \
-        -e FORMAT=json \
         ${{env.CONTAINER_IMAGE_TWISTCLI}}

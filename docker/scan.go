@@ -40,8 +40,6 @@ var (
 	gitHubRepo    string
 	commitSHA     string
 
-	outputFormat = "table"
-
 	postGithubStatus = true
 	exitCode         = -1
 )
@@ -52,55 +50,36 @@ type token struct {
 
 func init() {
 	arg := os.Args
-	for _, currentArg := range arg {
-		if strings.HasPrefix(currentArg, "container=") {
-			containername = strings.Split(currentArg, "=")[1]
-		}
-		if strings.HasPrefix(currentArg, "githubtoken=") {
-			patToken = strings.Split(currentArg, "=")[1]
-		}
-		if strings.HasPrefix(currentArg, "format=") {
-			outputFormat = strings.Split(currentArg, "=")[1] // optional output parameter, table or json
-		}
-		if strings.HasPrefix(currentArg, "status=") && strings.HasSuffix(currentArg, "=nostatus") {
-			postGithubStatus = false
-		}
-		if strings.HasPrefix(currentArg, "targeturl=") {
-			targetURL = strings.Split(currentArg, "=")[1]
-		}
-		if strings.HasPrefix(currentArg, "githuburl=") {
-			gitHubURL = strings.Split(currentArg, "=")[1]
-		}
-		if strings.HasPrefix(currentArg, "repo=") {
-			gitHubRepo = strings.Split(currentArg, "=")[1]
-		}
-		if strings.HasPrefix(currentArg, "commit=") {
-			commitSHA = strings.Split(currentArg, "=")[1]
-		}
+	containername = arg[1]
+	argCount := len(os.Args)
+	if argCount < 3 || argCount > 7 || (arg[2] != "nostatus" && (arg[2] == "" || arg[3] == "" || arg[4] == "" || arg[5] == "" || arg[6] == "")) {
+		printWithColor(colorRed, "Required GitHub args not provided", "You should provide `nostatus` as 2nd arg or 5 args for GitHub status report")
+		os.Exit(exitCode)
 	}
 
-	if postGithubStatus {
-		if targetURL == "" || gitHubURL == "" || gitHubRepo == "" || commitSHA == "" {
-			printWithColor(colorRed, "Required GitHub args not provided:", " targetURL:", targetURL, " gitHubURL:",
-				gitHubURL, " gitHubRepo:", gitHubRepo, " commitSHA:",
-				commitSHA, " You should provide `status=nostatus` or GitHub status report")
-			os.Exit(exitCode)
-		} else {
-			printWithColor(colorGreen, "Running scanner with GitHub status report")
-		}
-	} else {
+	patToken = arg[2]
+
+	if strings.ToLower(patToken) == "nostatus" {
 		printWithColor(colorYellow, "Running scanner without GitHub status report")
+		postGithubStatus = false
+	} else {
+		targetURL = arg[3]
+		gitHubURL = arg[4]
+		gitHubRepo = arg[5]
+		commitSHA = arg[6]
+		printWithColor(colorGreen, "Running scanner with GitHub status report")
 	}
 }
 
 func main() {
 	printWithColor(colorGreen, "Scanning container image: "+containername+"\n")
 
-	if !strings.Contains(containername, ":") {
-		containername += ":latest"
+	var ghClient GitHubClient
+	if postGithubStatus {
+		ghClient = NewGitHubAPIClient(patToken, targetURL, gitHubURL, gitHubRepo, commitSHA)
+		postGitHubState(ghClient, "pending")
+		defer cleanUpAndPostGithubStatus(&ghClient)
 	}
-
-	defer cleanUp()
 
 	awsClient := awspkg.NewAWSSDKClient()
 	prismasecret := awspkg.GetSecretFromS3(awsClient, "gd-security-prod-container-scanner-storage", "prisma-secret.json", "us-east-1")
@@ -118,7 +97,7 @@ func main() {
 
 	scanResult.normalize(overrides)
 
-	exitCode = scanResult.reportToCLI(outputFormat)
+	exitCode = scanResult.reportToCLI()
 }
 
 func postGitHubState(ghClient GitHubClient, state string) {
@@ -129,25 +108,21 @@ func postGitHubState(ghClient GitHubClient, state string) {
 	}
 }
 
-func cleanUp() {
-	if postGithubStatus {
-		var ghClient = NewGitHubAPIClient(patToken, targetURL, gitHubURL, gitHubRepo, commitSHA)
-		postGitHubState(ghClient, "pending")
-		err := recover()
-		if err != nil {
-			// Panic found, likely an error occurred.
-			postGitHubState(ghClient, "error")
-			printWithColor(colorRed, err, string(debug.Stack()))
+func cleanUpAndPostGithubStatus(ghClient *GitHubClient) {
+	err := recover()
+	if err != nil {
+		// Panic found, likely an error occurred.
+		postGitHubState(*ghClient, "error")
+		printWithColor(colorRed, err, string(debug.Stack()))
+	} else {
+		if exitCode == 0 {
+			// Successful run, no volnerabilities were found in a container.
+			postGitHubState(*ghClient, "success")
 		} else {
-			if exitCode == 0 {
-				// Successful run, no volnerabilities were found in a container.
-				postGitHubState(ghClient, "success")
-			} else {
-				// Not successful run, one or more volnerabilities were found in a container.
-				postGitHubState(ghClient, "failure")
-			}
+			// Not successful run, one or more volnerabilities were found in a container.
+			postGitHubState(*ghClient, "failure")
 		}
-
 	}
+
 	os.Exit(exitCode)
 }
