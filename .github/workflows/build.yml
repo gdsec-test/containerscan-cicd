@@ -41,7 +41,7 @@ jobs:
         run: |
           cd docker
           go get
-          go test ./... -coverprofile coverage.out -args some test args too && go tool cover -func=coverage.out
+          go test ./... -coverprofile coverage.out -args targeturl=some githuburl=more repo=test commit=args too && go tool cover -func=coverage.out
       - name: Run Build
         run: |
           cd docker

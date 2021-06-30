@@ -1,6 +1,6 @@
 # FROM golang:1.12.0-alpine3.9
 # FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.15-alpine-3.12
-FROM alpine:latest
+FROM alpine:3.12
 
 USER root
 
