@@ -14,11 +14,11 @@ PAT=<PAT_TOKEN>
 GITHUB_REPO=<OWNER/REPO_NAME>
 COMMIT_SHA=<COMMIT_SHA>
 
-docker build -t ${CONTAINER} .
+docker build -t ${CONTAINER} . -f good.Dockerfile
 
 aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 764525110978.dkr.ecr.us-west-2.amazonaws.com
 
-export AWS_DEFAULT_REGION=us-east-1
+export AWS_DEFAULT_REGION=us-west-2
 
 docker build -t twisttest ../docker/.
 docker run \

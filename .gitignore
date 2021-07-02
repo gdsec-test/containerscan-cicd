@@ -20,3 +20,4 @@ local/*
 twistcli
 .venv
 main
+test/*.json

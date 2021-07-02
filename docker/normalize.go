@@ -136,6 +136,7 @@ func (comp *ComplianceIssues) normalize(businessExceptions []businessException) 
 	findingid := "containerscan/" + awsRegion + "/" + repo + "/" + tag + "/gd_prisma_compliance"
 
 	for _, c := range *comp {
+		c["typeid"] = translatePackageType(int(c["id"].(float64)))
 		c["cpl"] = strconv.Itoa(int(c["id"].(float64)))
 		c["fid"] = findingid
 		c["id"] = findingid
@@ -161,6 +162,7 @@ func (vuln *Vulnerabilities) normalize(businessExceptions []businessException) {
 		pkgname := v["packageName"].(string)
 
 		findingid += pkgname
+		v["packageType"] = translatePackageType(int(v["id"].(float64)))
 		v["fid"] = findingid
 		v["id"] = findingid
 

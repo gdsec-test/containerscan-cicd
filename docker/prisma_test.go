@@ -2,10 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_saveTwistCli(t *testing.T) {
@@ -186,4 +187,15 @@ func Test_getAPIResponse_OK(t *testing.T) {
 		t.Error("API call error")
 	}
 
+}
+
+func Test_translatePackageType(t *testing.T) {
+	assert.Equal(t, "OS", translatePackageType(46), "Expected 46 to return OS.")
+	assert.Equal(t, "Java", translatePackageType(47), "Expected 47 to return Java.")
+	assert.Equal(t, "Gem", translatePackageType(48), "Expected 48 to return Gem.")
+	assert.Equal(t, "JavaScript", translatePackageType(49), "Expected 49 to return JavaScript.")
+	assert.Equal(t, "Python", translatePackageType(410), "Expected 410 to return Python.")
+	assert.Equal(t, "Binary", translatePackageType(411), "Expected 411 to return Binary.")
+	assert.Equal(t, "Nuget", translatePackageType(415), "Expected 415 to return Nuget.")
+	assert.Equal(t, "-111", translatePackageType(-111), "Expected -111 to return -111.")
 }

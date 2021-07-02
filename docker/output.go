@@ -88,12 +88,10 @@ func (vuln Vulnerabilities) reportToCLI() (bool, bool) {
 		"CVSS",
 		"Severity",
 		"Status",
+		"Package Type",
 		"Package Name",
 		"Package Version",
-		// "Description",
-		// "Type",
 		"Link",
-		// "SUPPRESS",
 	})
 	table.SetRowLine(true)
 	table.SetRowSeparator("-")
@@ -104,15 +102,10 @@ func (vuln Vulnerabilities) reportToCLI() (bool, bool) {
 		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold},
-		// tablewriter.Colors{tablewriter.Bold},
-		// tablewriter.Colors{tablewriter.Bold},
+		tablewriter.Colors{tablewriter.Bold},
 		tablewriter.Colors{tablewriter.Bold})
 
 	for _, v := range vuln {
-		// sup := ""
-		// if v["SUPPRESS"] != nil {
-		// sup = "SUPPRESS"
-		// }
 		if v["block"] != nil {
 			blocking = true
 		}
@@ -121,9 +114,9 @@ func (vuln Vulnerabilities) reportToCLI() (bool, bool) {
 			strconv.FormatFloat(v["cvss"].(float64), 'f', 2, 64),
 			v["severity"].(string),
 			v["status"].(string),
+			v["packageType"].(string),
 			v["packageName"].(string),
 			v["packageVersion"].(string),
-			// v["description"].(string),
 			"https://web.nvd.nist.gov/view/vuln/detail?vulnId=" + v["cve"].(string),
 		})
 	}

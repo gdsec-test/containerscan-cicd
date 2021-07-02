@@ -3,12 +3,14 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/cenkalti/backoff/v4"
 	"io/ioutil"
 	"net/http"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/cenkalti/backoff/v4"
 )
 
 type API struct {
@@ -152,4 +154,25 @@ func getPrismaKeys(prismasecret *string) (string, string) {
 	prismaSecretKey := p["prismaSecretKey"].(string)
 
 	return prismaAccessKeyID, prismaSecretKey
+}
+
+// https://docs.twistlock.com/docs/enterprise_edition/vulnerability_management/scan_reports.html#package-types
+func translatePackageType(cid int) string {
+	m := map[int]string{
+		46:  "OS",
+		47:  "Java",
+		48:  "Gem",
+		49:  "JavaScript",
+		410: "Python",
+		411: "Binary",
+		415: "Nuget",
+	}
+
+	v, found := m[cid]
+
+	if !found {
+		return strconv.Itoa(cid)
+	}
+
+	return v
 }
