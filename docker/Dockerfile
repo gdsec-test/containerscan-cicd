@@ -1,6 +1,6 @@
 FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.15-alpine-3.12
 
-ENV CONTAINERSCAN_VERSION 1.1.0
+ENV CONTAINERSCAN_VERSION 1.1.1
 ENV SCAN_ENV dev
 
 USER root
@@ -26,4 +26,4 @@ RUN chmod -R a+rwxX /app
 
 USER worker
 
-CMD "/app/main" "$CONTAINER" "${SCANNER_STATUS:-${PAT}}" "$TARGET_URL" "$GITHUB_URL" "$GITHUB_REPO" "$COMMIT_SHA"
+CMD "/app/main" "container=$CONTAINER" "status=$SCANNER_STATUS" "githubtoken=$PAT" "targeturl=$TARGET_URL" "githuburl=$GITHUB_URL" "repo=$GITHUB_REPO" "commit=$COMMIT_SHA" "format=$FORMAT"

@@ -23,7 +23,7 @@ $ source .venv/bin/activate # Activate virtual envrionment
 ```bash
 $ cd docker # Change into docker folder.
 
-./docker $ go test ./... -coverprofile coverage.out -args some test args here && go tool cover -html=coverage.out # Validate your code is passing unit test & covered.
+./docker $ go test ./... -coverprofile coverage.out -args targeturl=some githuburl=more repo=test commit=args too && go tool cover -func=coverage.out # Validate your code is passing unit test & covered.
 ```
 
 3. Integration test.

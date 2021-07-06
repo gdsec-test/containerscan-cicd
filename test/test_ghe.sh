@@ -14,7 +14,7 @@ PAT=<PAT_TOKEN>
 GITHUB_REPO=<OWNER/REPO_NAME>
 COMMIT_SHA=<COMMIT_SHA>
 
-docker build -t ${CONTAINER} . -f good.Dockerfile
+docker build -t ${CONTAINER} . -f bad.go.Dockerfile
 
 aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 764525110978.dkr.ecr.us-west-2.amazonaws.com
 

@@ -8,11 +8,6 @@ echo " Plesase replace <...> with necessary fields to run test scripts"
 echo
 
 CONTAINER=containerscan-cicd-test:latest
-TARGET_URL=https://github.com/gdcorp-infosec/containerscan-cicd
-GITHUB_URL=https://github.com/
-PAT=<PAT_TOKEN>
-GITHUB_REPO=<OWNER/REPO_NAME>
-COMMIT_SHA=<COMMIT_SHA>
 
 docker build -t ${CONTAINER} . -f bad.go.Dockerfile
 
@@ -21,6 +16,7 @@ aws ecr get-login-password --region us-west-2 | docker login --username AWS --pa
 export AWS_DEFAULT_REGION=us-west-2
 
 docker build -t twisttest ../docker/.
+
 docker run \
     --rm \
     -u root \
@@ -30,9 +26,6 @@ docker run \
     -e AWS_SESSION_TOKEN \
     -e AWS_DEFAULT_REGION \
     -e CONTAINER=${CONTAINER} \
-    -e PAT=${PAT} \
-    -e TARGET_URL=${TARGET_URL} \
-    -e GITHUB_URL=${GITHUB_URL} \
-    -e GITHUB_REPO=${GITHUB_REPO} \
-    -e COMMIT_SHA=${COMMIT_SHA} \
+    -e SCANNER_STATUS=nostatus \
+    -e FORMAT=json \
     twisttest:latest
