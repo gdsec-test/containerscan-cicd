@@ -79,12 +79,26 @@ func getAwsUrl(org_type string, awsaccountid string) string {
 	return url
 }
 
-func getOverridesFromAPI() []byte {
+func getOrgType(awsDefaultRegion string) string {
+	c := awspkg.NewAWSSDKClient()
+	var org_type = "non-pci"
+	var paramName = "/AdminParams/Team/OrgType"
+	param, err := awspkg.GetSSMParameter(c, paramName, awsDefaultRegion)
+	if err != nil {
+		printWithColor(colorRed, fmt.Sprintf("%v\nAWS System parameter %s not found in region %s, set to default value %s\n", err,
+		paramName, awsDefaultRegion, org_type))
+	} else {
+		org_type = *param.Parameter.Value
+	}
+	return org_type
+}
+
+func getOverridesFromAPI(awsDefaultRegion string) []byte {
 	c := awspkg.NewAWSSDKClient()
 	awsaccountid := awspkg.GetAwsAccount(c)
-	org_type := awspkg.GetSSMParameter(c, "/AdminParams/Team/OrgType")
+	org_type := getOrgType(awsDefaultRegion);
 	url := getAwsUrl(org_type, awsaccountid)
-	overrides, error := awspkg.CallExecuteAPI(c, url, "us-west-2")
+	overrides, error := awspkg.CallExecuteAPI(c, url, awsDefaultRegion)
 
 	if error != nil {
 		fmt.Printf("Error retrieving overrides:%s\n", error.Error())

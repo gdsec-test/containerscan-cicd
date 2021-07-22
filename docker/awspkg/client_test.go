@@ -36,7 +36,7 @@ func TestGetCallerIdentity(t *testing.T) {
 func TestGetParameter(t *testing.T) {
 	c := NewAWSSDKClient()
 
-	c.GetParameter("test")
+	c.GetParameter("test", "us-west-2")
 }
 
 func TestExecuteRequest(t *testing.T) {

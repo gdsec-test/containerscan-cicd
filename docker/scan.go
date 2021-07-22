@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"runtime/debug"
 	"strings"
@@ -33,12 +34,13 @@ var (
 	prismaSecretName = "PrismaAccessKeys"
 	prismaConsoleURL = "https://us-east1.cloud.twistlock.com/us-2-158254964"
 
-	containername string
-	patToken      string
-	targetURL     string
-	gitHubURL     string
-	gitHubRepo    string
-	commitSHA     string
+	containername      string
+	patToken           string
+	targetURL          string
+	gitHubURL          string
+	gitHubRepo         string
+	commitSHA          string
+	awsDefaultRegion string
 
 	outputFormat = "table"
 
@@ -48,6 +50,13 @@ var (
 
 type token struct {
 	Token string
+}
+
+func checkRequiredEnvVariable(name string) {
+	if os.Getenv(name) == "" {
+		printWithColor(colorRed, fmt.Sprintf("Required Environment variable %s is not provided\n", name))
+		os.Exit(exitCode)
+	}
 }
 
 func init() {
@@ -77,7 +86,16 @@ func init() {
 		if strings.HasPrefix(currentArg, "commit=") {
 			commitSHA = strings.Split(currentArg, "=")[1]
 		}
+		if strings.HasPrefix(currentArg, "aws_default_region=") {
+			awsDefaultRegion = strings.Split(currentArg, "=")[1]
+		}
 	}
+
+	// check for required environment variables
+	checkRequiredEnvVariable("AWS_ACCESS_KEY_ID")
+	checkRequiredEnvVariable("AWS_SECRET_ACCESS_KEY")
+	checkRequiredEnvVariable("AWS_SESSION_TOKEN")
+	checkRequiredEnvVariable("AWS_DEFAULT_REGION")
 
 	if postGithubStatus {
 		if targetURL == "" || gitHubURL == "" || gitHubRepo == "" || commitSHA == "" {
@@ -114,7 +132,7 @@ func main() {
 	resultstring := runTwistCli(token.Token, containername)
 	scanResult := formatTwistlockResult(resultstring)
 
-	overrides := getOverridesFromAPI()
+	overrides := getOverridesFromAPI(awsDefaultRegion)
 
 	scanResult.normalize(overrides)
 

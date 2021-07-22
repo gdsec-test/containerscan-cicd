@@ -17,7 +17,7 @@ type AWSClient interface {
 	newSession() *session.Session
 	GetSecretValue(secretName string, region string) (*secretsmanager.GetSecretValueOutput, error)
 	GetCallerIdentity() (*sts.GetCallerIdentityOutput, error)
-	GetParameter(name string) (*ssm.GetParameterOutput, error)
+	GetParameter(name string, region string) (*ssm.GetParameterOutput, error)
 	ExecuteRequest(url string, region string) (*http.Response, error)
 	GetS3Object(bucketName string, objectName string, region string) ([]byte, error)
 }
@@ -58,9 +58,9 @@ func (c *SDKAWSClient) GetCallerIdentity() (*sts.GetCallerIdentityOutput, error)
 	return svc.GetCallerIdentity(input)
 }
 
-func (c *SDKAWSClient) GetParameter(name string) (*ssm.GetParameterOutput, error) {
+func (c *SDKAWSClient) GetParameter(name string, region string) (*ssm.GetParameterOutput, error) {
 	sess := c.newSession()
-	svc := ssm.New(sess, aws.NewConfig())
+	svc := ssm.New(sess, aws.NewConfig().WithRegion(region))
 
 	input := getParameterInput(name)
 

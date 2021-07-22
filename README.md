@@ -22,7 +22,10 @@ $ source .venv/bin/activate # Activate virtual envrionment
 
 ```bash
 $ cd docker # Change into docker folder.
-
+export AWS_ACCESS_KEY_ID="someid"
+export AWS_SECRET_ACCESS_KEY="somekey"
+export AWS_SESSION_TOKEN="somesession"
+export AWS_DEFAULT_REGION="someregion"
 ./docker $ go test ./... -coverprofile coverage.out -args targeturl=some githuburl=more repo=test commit=args too && go tool cover -func=coverage.out # Validate your code is passing unit test & covered.
 ```
 

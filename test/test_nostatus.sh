@@ -7,7 +7,7 @@ echo
 echo " Plesase replace <...> with necessary fields to run test scripts"
 echo
 
-CONTAINER=containerscan-cicd-test:latest
+CONTAINER=764525110978.dkr.ecr.us-west-2.amazonaws.com/scanned:latest
 
 docker build -t ${CONTAINER} . -f bad.go.Dockerfile
 

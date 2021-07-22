@@ -51,15 +51,11 @@ jobs:
         -e AWS_SECRET_ACCESS_KEY \
         -e AWS_SESSION_TOKEN \
         -e AWS_DEFAULT_REGION \
-        -e TARGET_URL=https://github.com/${{github.repository}}/actions/runs/${{github.run_id}} \
-        -e GITHUB_URL=https://github.com/ \
-        -e PAT=${{github.token}} \
-        -e GITHUB_REPO=${{github.repository}} \
-        -e COMMIT_SHA=${PR_SHA:-${{github.sha}}} \
+        -e SCANNER_STATUS=nostatus \
         -e CONTAINER=${{env.CONTAINER_BAD_IMAGE_TEST}} \
         ${{env.CONTAINER_IMAGE_TWISTCLI}}
 
-    - name: Scan bad image with JSON output
+    - name: Scan bad image with JSON output without posting github status
       continue-on-error: true
       run: |
         PR_SHA=${{github.event.pull_request.head.sha}}
@@ -71,11 +67,7 @@ jobs:
         -e AWS_SECRET_ACCESS_KEY \
         -e AWS_SESSION_TOKEN \
         -e AWS_DEFAULT_REGION \
-        -e TARGET_URL=https://github.com/${{github.repository}}/actions/runs/${{github.run_id}} \
-        -e GITHUB_URL=https://github.com/ \
-        -e PAT=${{github.token}} \
-        -e GITHUB_REPO=${{github.repository}} \
-        -e COMMIT_SHA=${PR_SHA:-${{github.sha}}} \
+        -e SCANNER_STATUS=nostatus \
         -e CONTAINER=${{env.CONTAINER_BAD_IMAGE_TEST}} \
         -e FORMAT=json \
         ${{env.CONTAINER_IMAGE_TWISTCLI}}

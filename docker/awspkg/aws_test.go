@@ -32,7 +32,7 @@ func (c *MockAWSClient) GetCallerIdentity() (*sts.GetCallerIdentityOutput, error
 	return &sts.GetCallerIdentityOutput{Account: &str}, err
 }
 
-func (c *MockAWSClient) GetParameter(name string) (*ssm.GetParameterOutput, error) {
+func (c *MockAWSClient) GetParameter(name string, region string) (*ssm.GetParameterOutput, error) {
 	var err error
 	str := "test-value"
 
@@ -147,15 +147,16 @@ func TestGetSSMParameter_HappyPath(t *testing.T) {
 	c := NewMockAWSClient(false)
 	name := "test-value"
 
-	GetSSMParameter(c, name)
+	GetSSMParameter(c, name, "us-west-2")
 }
 
 func TestGetSSMParameter_ErrorPath(t *testing.T) {
-	defer assertPanic(t)
 	c := NewMockAWSClient(true)
 	name := "test-value"
-
-	GetSSMParameter(c, name)
+	_, err := GetSSMParameter(c, name, "us-west-2")
+	if err == nil {
+		t.Error("The code did not throw error due to not found param")
+	}
 }
 
 func TestGetAwsAccount(t *testing.T) {
