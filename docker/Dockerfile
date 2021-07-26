@@ -1,6 +1,6 @@
 FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.15-alpine-3.12
 
-ENV CONTAINERSCAN_VERSION 1.1.2
+ENV CONTAINERSCAN_VERSION 1.1.3
 ENV SCAN_ENV dev
 
 USER root
@@ -26,4 +26,6 @@ RUN chmod -R a+rwxX /app
 
 USER worker
 
-CMD "/app/main" "aws_default_region=$AWS_DEFAULT_REGION" "container=$CONTAINER" "status=$SCANNER_STATUS" "githubtoken=$PAT" "targeturl=$TARGET_URL" "githuburl=$GITHUB_URL" "repo=$GITHUB_REPO" "commit=$COMMIT_SHA" "format=$FORMAT"
+# use ${SCANNER_STATUS:-github} ensures that if SCANNER_STATUS is not defined, it will default to "github"
+# AWS_DEFAULT_REGION should be set as an environment variable
+CMD "/app/main" "--container=$CONTAINER" "--status=${SCANNER_STATUS:-github}" "--githubtoken=$PAT" "--targeturl=$TARGET_URL" "--githuburl=$GITHUB_URL" "--repo=$GITHUB_REPO" "--commit=$COMMIT_SHA" "--format=${FORMAT:-table}"

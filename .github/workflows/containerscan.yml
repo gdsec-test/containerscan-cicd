@@ -69,7 +69,7 @@ jobs:
         ${{env.CONTAINER_IMAGE_TWISTCLI}}
 
     - name: Build and tag good image for test scan
-      run: cd ./test && docker build -t ${{env.CONTAINER_GOOD_IMAGE_TEST}} . -f good.Dockerfile 
+      run: cd ./test && docker build -t ${{env.CONTAINER_GOOD_IMAGE_TEST}} . -f good.Dockerfile
 
     - name: Scan good image without posting github status
       run: |

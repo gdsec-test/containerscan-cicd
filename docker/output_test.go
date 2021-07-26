@@ -14,7 +14,7 @@ var overrides = []byte(`{
 "exception_id": "66e68750-7ae3-46bb-b7a4-0c2b3a95d427",
 "author": "arn:aws:sts::672751022979:assumed-role/GD-AWS-Global-Audit-Admin/rbailey@godaddy.com"
 },{"version": 1,"updated": 1605141042,
-"pattern": {"Fid": "^containerscan/us-west-2/.*/.*/gd_prisma_compliance", 
+"pattern": {"Fid": "^containerscan/us-west-2/.*/.*/gd_prisma_compliance",
             "Cpl": "^414"}
 ,"expiration": 1845774345,
 "comment": "Scans on GD-AWS-USA-CPO-OXManaged Accounts | Non-Golden AMIs",	"exception_id": "bb86f3e0-63ee-4e19-8fa6-99347f728729",
@@ -112,7 +112,7 @@ func Test_reportToCLI(t *testing.T) {
 	formatedResult := formatTwistlockResult(scanresult)
 
 	formatedResult.normalize(overrides)
-	formatedResult.reportToCLI("table")
+	formatedResult.reportToCLI(OUTPUT_TABLE)
 
 	// formatedResult.ComplianceIssues[0]["block"] = true
 	// formatedResult.Vulnerabilities[0]["block"] = true
@@ -213,7 +213,7 @@ func Test_reportToCLI_block(t *testing.T) {
 	formatedResult := formatTwistlockResult(scanresult)
 
 	formatedResult.normalize(overrides)
-	result := formatedResult.reportToCLI("table")
+	result := formatedResult.reportToCLI(OUTPUT_TABLE)
 	if result != 1 {
 		t.Error("report to cli failed for blocking rules")
 	}
@@ -317,7 +317,7 @@ func Test_reportToCLI_With_JSON_Format_block(t *testing.T) {
 	formatedResult := formatTwistlockResult(scanresult)
 
 	formatedResult.normalize(overrides)
-	result := formatedResult.reportToCLI("json")
+	result := formatedResult.reportToCLI(OUTPUT_JSON)
 	if result != 1 {
 		t.Error("report to cli failed for blocking rules")
 	}
@@ -355,6 +355,6 @@ func Test_reportToCLI_no_finding(t *testing.T) {
 	formatedResult := formatTwistlockResult(scanresult)
 
 	formatedResult.normalize(overrides)
-	formatedResult.reportToCLI("table")
+	formatedResult.reportToCLI(OUTPUT_TABLE)
 
 }

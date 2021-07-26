@@ -1,12 +1,29 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"runtime/debug"
 	"strings"
 
 	"github.com/gdcorp-infosec/containerscan-cicd/docker/awspkg"
+)
+
+const (
+	EXIT_SUCCESS = iota
+	EXIT_FAILURE = iota
+	EXIT_BAD_ARG = iota
+)
+
+const (
+	STATUS_NONE   = iota
+	STATUS_GITHUB = iota
+)
+
+const (
+	OUTPUT_TABLE = iota
+	OUTPUT_JSON  = iota
 )
 
 //ScanResult scan result with compliance and vulnerability findinds
@@ -34,91 +51,118 @@ var (
 	prismaSecretName = "PrismaAccessKeys"
 	prismaConsoleURL = "https://us-east1.cloud.twistlock.com/us-2-158254964"
 
-	containername      string
-	patToken           string
-	targetURL          string
-	gitHubURL          string
-	gitHubRepo         string
-	commitSHA          string
+	requiredEnvironmentVariables = []string{
+		"AWS_ACCESS_KEY_ID",
+		"AWS_SECRET_ACCESS_KEY",
+		"AWS_SESSION_TOKEN",
+		"AWS_DEFAULT_REGION",
+	}
+
+	containername    string
+	patToken         string
+	targetURL        string
+	gitHubURL        string
+	gitHubRepo       string
+	commitSHA        string
 	awsDefaultRegion string
 
-	outputFormat = "table"
+	statusString     = ""
+	outputTypeString = ""
 
-	postGithubStatus = true
-	exitCode         = -1
+	outputFormat = OUTPUT_JSON
+	statusType   = STATUS_GITHUB
+
+	exitCode      = EXIT_FAILURE
+	debugMessages []string
 )
 
 type token struct {
 	Token string
 }
 
-func checkRequiredEnvVariable(name string) {
+func checkRequiredEnvVariableIsSet(name string) bool {
 	if os.Getenv(name) == "" {
 		printWithColor(colorRed, fmt.Sprintf("Required Environment variable %s is not provided\n", name))
-		os.Exit(exitCode)
+		return false
 	}
+	return true
 }
 
-func init() {
-	arg := os.Args
-	for _, currentArg := range arg {
-		if strings.HasPrefix(currentArg, "container=") {
-			containername = strings.Split(currentArg, "=")[1]
-		}
-		if strings.HasPrefix(currentArg, "githubtoken=") {
-			patToken = strings.Split(currentArg, "=")[1]
-		}
-		if strings.HasPrefix(currentArg, "format=") {
-			outputFormat = strings.Split(currentArg, "=")[1] // optional output parameter, table or json
-		}
-		if strings.HasPrefix(currentArg, "status=") && strings.HasSuffix(currentArg, "=nostatus") {
-			postGithubStatus = false
-		}
-		if strings.HasPrefix(currentArg, "targeturl=") {
-			targetURL = strings.Split(currentArg, "=")[1]
-		}
-		if strings.HasPrefix(currentArg, "githuburl=") {
-			gitHubURL = strings.Split(currentArg, "=")[1]
-		}
-		if strings.HasPrefix(currentArg, "repo=") {
-			gitHubRepo = strings.Split(currentArg, "=")[1]
-		}
-		if strings.HasPrefix(currentArg, "commit=") {
-			commitSHA = strings.Split(currentArg, "=")[1]
-		}
-		if strings.HasPrefix(currentArg, "aws_default_region=") {
-			awsDefaultRegion = strings.Split(currentArg, "=")[1]
-		}
+func defineFlags() {
+	flag.StringVar(&containername, "container", "", "The name of the container to scan")
+	flag.StringVar(&patToken, "githubtoken", "", "Personal Access Token for GitHub")
+	flag.StringVar(&outputTypeString, "format", "table", "Scanner Output format; one of: (table|json)")
+	flag.StringVar(&statusString, "status", "github", "Kind of status to post; one of (nostatus|github) (if unknown, selects 'github')")
+	flag.StringVar(&targetURL, "targeturl", "", "The target URL")
+	flag.StringVar(&gitHubURL, "githuburl", "", "The GitHub repository URL, either GHC or GHE")
+	flag.StringVar(&gitHubRepo, "repo", "", "Repository to scan")
+	flag.StringVar(&commitSHA, "commit", "", "The hash of the commit in the `repo` to check out")
+}
+
+func parseAndCheckArgs() bool {
+	var checksPass = true
+
+	flag.Parse()
+
+	// this should always be done first to ensure output type is set properly
+	switch outputTypeString {
+	case "json":
+		outputFormat = OUTPUT_JSON
+	case "table":
+		outputFormat = OUTPUT_TABLE
+	default:
+		outputFormat = OUTPUT_JSON
+		printWithColor(colorYellow, "Warning: unknown output format requested ("+outputTypeString+"), using 'json' instead")
+	}
+
+	switch statusString {
+	case "nostatus":
+		statusType = STATUS_NONE
+	case "github":
+		statusType = STATUS_GITHUB
+	default:
+		statusType = STATUS_GITHUB
+		printWithColor(colorYellow, "Warning: unknown status type requested ("+outputTypeString+"), using 'github' instead")
 	}
 
 	// check for required environment variables
-	checkRequiredEnvVariable("AWS_ACCESS_KEY_ID")
-	checkRequiredEnvVariable("AWS_SECRET_ACCESS_KEY")
-	checkRequiredEnvVariable("AWS_SESSION_TOKEN")
-	checkRequiredEnvVariable("AWS_DEFAULT_REGION")
+	for _, v := range requiredEnvironmentVariables {
+		checksPass = checksPass && checkRequiredEnvVariableIsSet(v)
+	}
 
-	if postGithubStatus {
+	awsDefaultRegion = os.Getenv("AWS_DEFAULT_REGION")
+	if statusType == STATUS_GITHUB {
 		if targetURL == "" || gitHubURL == "" || gitHubRepo == "" || commitSHA == "" {
 			printWithColor(colorRed, "Required GitHub args not provided:", " targetURL:", targetURL, " gitHubURL:",
 				gitHubURL, " gitHubRepo:", gitHubRepo, " commitSHA:",
 				commitSHA, " You should provide `status=nostatus` or GitHub status report")
-			os.Exit(exitCode)
+			checksPass = false
 		} else {
 			printWithColor(colorGreen, "Running scanner with GitHub status report")
 		}
 	} else {
 		printWithColor(colorYellow, "Running scanner without GitHub status report")
 	}
+
+	return checksPass
 }
 
 func main() {
+	defer cleanUp()
+	defer outputResults() // does not take in outputFormat because it will be updated
+
+	defineFlags()
+	if ok := parseAndCheckArgs(); !ok {
+		printWithColor(colorRed, "FATAL: some arguments or environment variables were not set")
+		exitCode = EXIT_BAD_ARG
+		return
+	}
+
 	printWithColor(colorGreen, "Scanning container image: "+containername+"\n")
 
 	if !strings.Contains(containername, ":") {
 		containername += ":latest"
 	}
-
-	defer cleanUp()
 
 	awsClient := awspkg.NewAWSSDKClient()
 	prismasecret := awspkg.GetSecretFromS3(awsClient, "gd-security-prod-container-scanner-storage", "prisma-secret.json", "us-east-1")
@@ -148,7 +192,7 @@ func postGitHubState(ghClient GitHubClient, state string) {
 }
 
 func cleanUp() {
-	if postGithubStatus {
+	if statusType == STATUS_GITHUB {
 		var ghClient = NewGitHubAPIClient(patToken, targetURL, gitHubURL, gitHubRepo, commitSHA)
 		postGitHubState(ghClient, "pending")
 		err := recover()
@@ -157,7 +201,7 @@ func cleanUp() {
 			postGitHubState(ghClient, "error")
 			printWithColor(colorRed, err, string(debug.Stack()))
 		} else {
-			if exitCode == 0 {
+			if exitCode == EXIT_SUCCESS {
 				// Successful run, no volnerabilities were found in a container.
 				postGitHubState(ghClient, "success")
 			} else {

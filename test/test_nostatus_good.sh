@@ -9,7 +9,7 @@ echo
 
 CONTAINER=containerscan-cicd-test:latest
 
-docker build -t ${CONTAINER} . -f bad.go.Dockerfile
+docker build -t ${CONTAINER} . -f good.Dockerfile
 
 aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 764525110978.dkr.ecr.us-west-2.amazonaws.com
 
@@ -27,5 +27,4 @@ docker run \
     -e AWS_DEFAULT_REGION \
     -e CONTAINER=${CONTAINER} \
     -e SCANNER_STATUS=nostatus \
-    -e FORMAT=json \
     twisttest:latest
