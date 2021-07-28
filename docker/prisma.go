@@ -34,7 +34,7 @@ func formatTwistlockResult(resultstring string) ScanResult {
 		printWithColor(colorRed, "Error : Unable to unmarshal twistlock result", err)
 		panic(err)
 	}
-
+	
 	return s[0].EntityInfo
 }
 

@@ -22,6 +22,10 @@ type businessException struct {
 	Version     int               `json:"version"`
 }
 
+var (
+	COMPLIENCE_PRIVATE_KEY_DETECTED  = 425
+)
+
 func (exc *businessException) apply(finding map[string]interface{}) bool {
 	//if expired, pass
 	if exc.Expiration > 0 {
@@ -86,7 +90,7 @@ func getOrgType(awsDefaultRegion string) string {
 	param, err := awspkg.GetSSMParameter(c, paramName, awsDefaultRegion)
 	if err != nil {
 		printWithColor(colorRed, fmt.Sprintf("%v\nAWS System parameter %s not found in region %s, set to default value %s\n", err,
-		paramName, awsDefaultRegion, org_type))
+			paramName, awsDefaultRegion, org_type))
 	} else {
 		org_type = *param.Parameter.Value
 	}
@@ -96,7 +100,7 @@ func getOrgType(awsDefaultRegion string) string {
 func getOverridesFromAPI(awsDefaultRegion string) []byte {
 	c := awspkg.NewAWSSDKClient()
 	awsaccountid := awspkg.GetAwsAccount(c)
-	org_type := getOrgType(awsDefaultRegion);
+	org_type := getOrgType(awsDefaultRegion)
 	url := getAwsUrl(org_type, awsaccountid)
 	overrides, error := awspkg.CallExecuteAPI(c, url, awsDefaultRegion)
 
@@ -108,27 +112,67 @@ func getOverridesFromAPI(awsDefaultRegion string) []byte {
 	return overrides
 }
 
+func formatSecretKeysIssues(res *ScanResult) (ComplianceIssues) {
+	var expandedComplianceIssues ComplianceIssues
+	for _, compliece := range res.ComplianceIssues {
+		if int(compliece["id"].(float64)) == COMPLIENCE_PRIVATE_KEY_DETECTED { // expand to be record per each file value in `Cause` field
+			cause := compliece["cause"].(string)
+			re := regexp.MustCompile(`(\/[\w-]+[^,]*)|([a-zA-Z]:\\[\\\S|*\S]?[^,]*)`) // matches Unix and Windows path
+			foundFiles := re.FindAllStringSubmatch(cause, -1)
+			for _, fileMatch := range foundFiles {
+				newCompliece := CopyMap(compliece)
+				newCompliece["cause"] = fileMatch[0] // filename is first item in match group
+				expandedComplianceIssues = append(expandedComplianceIssues, newCompliece)
+			}
+		} else {
+			expandedComplianceIssues = append(expandedComplianceIssues, compliece)
+		}
+	}
+	return expandedComplianceIssues
+}
+
 func (res *ScanResult) normalize(overrides []byte) {
 	// fmt.Println("in normalize")
 	// fmt.Println(string(overrides))
 	var businessExceptions businessRuleSet
 	json.Unmarshal(overrides, &businessExceptions)
+	businessExceptions.ExceptionList = append(businessExceptions.ExceptionList, businessException{  
+    ExceptionID: "someid",
+    Expiration: 0,
+    Pattern: map[string]string{
+      "cpl": "425",
+      "cause": "/app/node_modules/create-servers/test/fixtures/agent3-key.pem",
+    },
+    Version: 0,
+  })
+  businessExceptions.ExceptionList = append(businessExceptions.ExceptionList, businessException{  
+    ExceptionID: "someid",
+    Expiration: 0,
+    Pattern: map[string]string{
+      "cve": "CVE-2021-23369",
+    },
+    Version: 0,
+  })
+	
+	res.ComplianceIssues = formatSecretKeysIssues(res)
 
 	res.ComplianceIssues.normalize(businessExceptions.ExceptionList)
 	res.Vulnerabilities.normalize(businessExceptions.ExceptionList)
 	res.cleanOverrides()
 }
 
-func deleteOverrides(findings []map[string]interface{}) []map[string]interface{} {
+func deleteOverrides(findings []map[string]interface{}, outputFields []string) []map[string]interface{} {
 	filteredFindings := make([]map[string]interface{}, 0)
 
 	for _, finding := range findings {
-		sup := ""
-		if finding["SUPPRESS"] != nil {
-			sup = finding["SUPPRESS"].(string)
-		}
-		if sup == "" {
+		if finding["SUPPRESS"] == nil || finding["SUPPRESS"].(string) == "" {
 			filteredFindings = append(filteredFindings, finding)
+		} else {
+			outputFinding := make(map[string]interface{})
+			for _, field := range outputFields {
+				outputFinding[field] = finding[field]
+			}
+			printWithColor(colorYellow, fmt.Sprintf("Issue excluded from report due to exception: %v\n", outputFinding))
 		}
 	}
 	return filteredFindings
@@ -136,9 +180,9 @@ func deleteOverrides(findings []map[string]interface{}) []map[string]interface{}
 }
 func (res *ScanResult) cleanOverrides() {
 
-	res.ComplianceIssues = deleteOverrides(res.ComplianceIssues)
+	res.ComplianceIssues = deleteOverrides(res.ComplianceIssues, COMPLIENCE_OUTPUT_FIELDS)
 
-	res.Vulnerabilities = deleteOverrides(res.Vulnerabilities)
+	res.Vulnerabilities = deleteOverrides(res.Vulnerabilities, VULNERABILITY_OUTPUT_FIELDS)
 
 }
 

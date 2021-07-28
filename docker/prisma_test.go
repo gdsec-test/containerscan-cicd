@@ -79,6 +79,26 @@ func Test_formatTwistlockResult(t *testing.T) {
                     "published": 0,
                     "fixDate": 0,
                     "discovered": "0001-01-01T00:00:00Z"
+                },
+                {
+                    "text": "",
+                    "id": 425,
+                    "severity": "high",
+                    "cvss": 0,
+                    "status": "",
+                    "cve": "",
+                    "cause": "Found: /app/some.key, \n /app/another.crt, \n C:/one/more.pem , /and/too/another.one",
+                    "title": "Private keys stored in image",
+                    "type": "image",
+                    "packageName": "",
+                    "packageVersion": "",
+                    "layerTime": 0,
+                    "templates": null,
+                    "twistlock": false,
+                    "cri": false,
+                    "published": 0,
+                    "fixDate": 0,
+                    "discovered": "0001-01-01T00:00:00Z"
                 }
             ],
             "allCompliance": {},
@@ -131,7 +151,7 @@ func Test_formatTwistlockResult(t *testing.T) {
 `
 
 	formatedResult := formatTwistlockResult(result)
-	if len(formatedResult.ComplianceIssues) == 0 {
+	if len(formatedResult.ComplianceIssues) != 2 {
 		t.Error("format error")
 	}
 

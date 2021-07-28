@@ -80,3 +80,32 @@ func TestString(t *testing.T) {
 		t.Error("Expected :", s, "but got :", *String(s))
 	}
 }
+
+func TestCopyMap(t *testing.T) {
+	original := map[string]interface{}{
+		"onefield": "value1",
+		"twofield": "value2",
+		"nestedmap": map[string]string{
+			"nestedprop": "nestedval",
+		},
+	}
+	copy := CopyMap(original)
+
+	if &copy == &original {
+		t.Error("Expected copy to be separate object")
+	}
+	if copy["onefield"] != original["onefield"] {
+		t.Error("Expected copy to have 'onefield' value same")
+	}
+	if copy["twofield"] != original["twofield"] {
+		t.Error("Expected copy to have 'twofield' value same")
+	}
+	copyNestedmap := copy["nestedmap"]
+	originalNestedmap := original["nestedmap"]
+	if &copyNestedmap == &originalNestedmap {
+		t.Error("Expected copy to be separate object")
+	}
+	if copy["nestedmap"].(map[string]string)["nestedprop"] != original["nestedmap"].(map[string]string)["nestedprop"] {
+		t.Error("Expected copy to have 'nestedprop' value same")
+	}
+}

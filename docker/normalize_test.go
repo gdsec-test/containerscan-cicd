@@ -1,8 +1,10 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var scanresult = `====DATA[
@@ -40,7 +42,27 @@ var scanresult = `====DATA[
                 "published": 0,
                 "fixDate": 0,
                 "discovered": "0001-01-01T00:00:00Z"
-            }
+            },
+            {
+              "text": "",
+              "id": 425,
+              "severity": "high",
+              "cvss": 0,
+              "status": "",
+              "cve": "",
+              "cause": "Found: /app/some.key, \n /app/another.crt",
+              "title": "Private keys stored in image",
+              "type": "image",
+              "packageName": "",
+              "packageVersion": "",
+              "layerTime": 0,
+              "templates": null,
+              "twistlock": false,
+              "cri": false,
+              "published": 0,
+              "fixDate": 0,
+              "discovered": "0001-01-01T00:00:00Z"
+          }
         ],
         "allCompliance": {},
         "vulnerabilities": [
@@ -131,7 +153,7 @@ func Test_Normalize_withoutMatch(t *testing.T) {
 	}
 }
 
-func Test_Normalize_match_allrules(t *testing.T) {
+func Test_Normalize_match_allrules_but_one(t *testing.T) {
 
 	formatedResult := formatTwistlockResult(scanresult)
 
@@ -160,13 +182,40 @@ func Test_Normalize_match_allrules(t *testing.T) {
             "comment": "Scans on GD-SOME-ACCOUNT Accounts",
             "exception_id": "random-id",
             "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
+          },
+          {
+            "version": 1,
+            "updated": 1605141042,
+            "pattern": {
+              "Fid": "^containerscan/us-west-2/.*/.*/gd_prisma_compliance",
+              "cause": "/app/another.crt",
+              "Cpl": "^425"
+            },
+            "expiration": 1845774345,
+            "comment": "Scans on GD-SOME-ACCOUNT Accounts",
+            "exception_id": "random-id",
+            "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
+          },
+          {
+            "version": 1,
+            "updated": 1605141042,
+            "pattern": {
+              "Fid": "^containerscan/us-west-2/.*/.*/gd_prisma_compliance",
+              "cause": "C:/one/more.pem",
+              "Cpl": "^425"
+            },
+            "expiration": 1845774345,
+            "comment": "Scans on GD-SOME-ACCOUNT Accounts",
+            "exception_id": "random-id",
+            "author": "arn:aws:sts::11111111111:assumed-role/GD-Admin/test@test.godaddy.com"
           }
         ]
       }`)
 
 	formatedResult.normalize(overrides)
-	if len(formatedResult.ComplianceIssues) != 0 {
-		t.Error("normalize failed")
+	if len(formatedResult.ComplianceIssues) != 1 {
+		fmt.Printf("%v", formatedResult.ComplianceIssues)
+		t.Error("normalize failed. Complience exceptions were not properly filtered out")
 	}
 }
 

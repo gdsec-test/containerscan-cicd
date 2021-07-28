@@ -18,6 +18,8 @@ var (
 	vJSON  []map[string]interface{} = nil
 	cTable *tablewriter.Table       = nil
 	vTable *tablewriter.Table       = nil
+	COMPLIENCE_OUTPUT_FIELDS = []string{"cpl", "severity", "title", "cause"}
+	VULNERABILITY_OUTPUT_FIELDS = []string{"cve", "severity", "packageType", "packageName", "packageVersion", "status", "fixDate"}
 )
 
 func (res ScanResult) reportToCLI(outputFormat int) int {
