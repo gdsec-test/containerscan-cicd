@@ -58,7 +58,7 @@ SUCCESS : No issue(s) reported with the Image.
 
 ```
 
-### No status Json (Error)
+#### No status Json (Error)
 
 ```bash
 

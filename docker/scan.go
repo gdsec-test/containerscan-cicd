@@ -80,12 +80,10 @@ type token struct {
 	Token string
 }
 
-func checkRequiredEnvVariableIsSet(name string) bool {
+func checkRequiredEnvVariableIsSet(name string) {
 	if os.Getenv(name) == "" {
-		printWithColor(colorRed, fmt.Sprintf("Required Environment variable %s is not provided\n", name))
-		return false
+		printWithColor(colorYellow, fmt.Sprintf("[WARNING] Required Environment variable %s is not provided. If no alternatives are provided, this may result in error.\n", name))
 	}
-	return true
 }
 
 func defineFlags() {
@@ -127,7 +125,7 @@ func parseAndCheckArgs() bool {
 
 	// check for required environment variables
 	for _, v := range requiredEnvironmentVariables {
-		checksPass = checksPass && checkRequiredEnvVariableIsSet(v)
+		checkRequiredEnvVariableIsSet(v)
 	}
 
 	awsDefaultRegion = os.Getenv("AWS_DEFAULT_REGION")

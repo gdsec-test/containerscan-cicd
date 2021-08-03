@@ -11,24 +11,6 @@ func setRequiredEnvVarsForTesting() {
 	}
 }
 
-func Test_checkRequiredEnvVariableIsSet(t *testing.T) {
-	for _, v := range requiredEnvironmentVariables {
-		os.Unsetenv(v)
-		isSet := checkRequiredEnvVariableIsSet(v)
-		if isSet {
-			t.Error("Environment variable " + v + " got set somehow")
-		}
-	}
-
-	setRequiredEnvVarsForTesting()
-	for _, v := range requiredEnvironmentVariables {
-		isSet := checkRequiredEnvVariableIsSet(v)
-		if !isSet {
-			t.Error("Environment variable got set somehow")
-		}
-	}
-}
-
 func Test_parseAndCheckArgs(t *testing.T) {
 	setRequiredEnvVarsForTesting()
 	os.Args = []string{os.Args[0]}

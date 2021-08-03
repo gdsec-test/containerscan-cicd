@@ -236,7 +236,7 @@ func printWithColor(color string, str ...interface{}) {
 		thisMessage = strings.TrimSpace(thisMessage)
 		debugMessages = append(debugMessages, thisMessage)
 	} else {
-		prettyPrint(color, str)
+		prettyPrint(color, str...)
 	}
 }
 
