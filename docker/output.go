@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -14,12 +13,12 @@ import (
 )
 
 var (
-	cJSON  []map[string]interface{} = nil
-	vJSON  []map[string]interface{} = nil
-	cTable *tablewriter.Table       = nil
-	vTable *tablewriter.Table       = nil
-	COMPLIENCE_OUTPUT_FIELDS = []string{"cpl", "severity", "title", "cause"}
-	VULNERABILITY_OUTPUT_FIELDS = []string{"cve", "severity", "packageType", "packageName", "packageVersion", "status", "fixDate"}
+	cJSON                       []map[string]interface{} = nil
+	vJSON                       []map[string]interface{} = nil
+	cTable                      *tablewriter.Table       = nil
+	vTable                      *tablewriter.Table       = nil
+	COMPLIENCE_OUTPUT_FIELDS                             = []string{"cpl", "severity", "title", "cause"}
+	VULNERABILITY_OUTPUT_FIELDS                          = []string{"cve", "severity", "packageType", "packageName", "packageVersion", "status", "fixDate"}
 )
 
 func (res ScanResult) reportToCLI(outputFormat int) int {
@@ -53,7 +52,7 @@ func (res ScanResult) reportToCLI(outputFormat int) int {
 	return EXIT_SUCCESS
 }
 
-func outputResults() {
+func outputResults(exitCode int) error {
 	var (
 		jsonOutput []byte
 		err        error
@@ -62,17 +61,25 @@ func outputResults() {
 	if outputFormat == OUTPUT_JSON {
 		combined := mergeJSON(cJSON, vJSON)
 		jsonOutput, err = json.MarshalIndent(combined, "", "  ")
+
 		if err != nil {
-			panic(debug.Stack())
-		} else {
-			fmt.Println(string(jsonOutput))
+			return err
 		}
+
+		fmt.Println(string(jsonOutput))
+
 	} else if outputFormat == OUTPUT_TABLE {
+		if exitCode == EXIT_SUCCESS {
+			return nil
+		}
+
 		printWithColor(colorRed, "Compliance Issues:")
 		cTable.Render()
 		printWithColor(colorRed, "Vulnerabilities:")
 		vTable.Render()
 	}
+
+	return nil
 }
 
 func mergeJSON(cJSON []map[string]interface{}, vJSON []map[string]interface{}) map[string]interface{} {
@@ -229,10 +236,16 @@ func printWithColor(color string, str ...interface{}) {
 		thisMessage = strings.TrimSpace(thisMessage)
 		debugMessages = append(debugMessages, thisMessage)
 	} else {
-		fmt.Print(color)
-		for _, v := range str {
-			fmt.Println(v)
-		}
-		fmt.Print(colorReset)
+		prettyPrint(color, str)
 	}
+}
+
+func prettyPrint(color string, str ...interface{}) {
+	// Generally advise using `printWithColor` instead.
+	// Use this method to forcefully print texts.
+	fmt.Print(color)
+	for _, v := range str {
+		fmt.Println(v)
+	}
+	fmt.Print(colorReset)
 }

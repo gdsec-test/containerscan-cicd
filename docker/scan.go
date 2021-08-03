@@ -149,7 +149,6 @@ func parseAndCheckArgs() bool {
 
 func main() {
 	defer cleanUp()
-	defer outputResults() // does not take in outputFormat because it will be updated
 
 	defineFlags()
 	if ok := parseAndCheckArgs(); !ok {
@@ -192,14 +191,23 @@ func postGitHubState(ghClient GitHubClient, state string) {
 }
 
 func cleanUp() {
+	var outputErr error
+	err := recover()
+
+	if err != nil {
+		prettyPrint(colorRed, err, string(debug.Stack()))
+	} else {
+		if outputErr = outputResults(exitCode); outputErr != nil {
+			prettyPrint(colorRed, outputErr)
+		}
+	}
+
 	if statusType == STATUS_GITHUB {
 		var ghClient = NewGitHubAPIClient(patToken, targetURL, gitHubURL, gitHubRepo, commitSHA)
 		postGitHubState(ghClient, "pending")
-		err := recover()
-		if err != nil {
-			// Panic found, likely an error occurred.
+		if err != nil || outputErr != nil {
+			// Panic or error found, likely an error occurred.
 			postGitHubState(ghClient, "error")
-			printWithColor(colorRed, err, string(debug.Stack()))
 		} else {
 			if exitCode == EXIT_SUCCESS {
 				// Successful run, no volnerabilities were found in a container.
@@ -209,7 +217,7 @@ func cleanUp() {
 				postGitHubState(ghClient, "failure")
 			}
 		}
-
 	}
+
 	os.Exit(exitCode)
 }
