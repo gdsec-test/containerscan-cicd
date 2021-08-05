@@ -2,6 +2,11 @@
 
 <!-- Add description of PR -->
 
+### Check lists
+
+- [ ] Correctly updated build/release version with change(s) introduced.
+- [ ] Validated unit test & integration test results.
+
 ### Tests
 
 #### Unit Test
@@ -12,57 +17,18 @@
 
 ```
 
-#### No status (Good)
+#### Integration Test
 
-<!-- Example
+<!-- Run test/integration_test.sh -->
 
-```bash
-containerscan-cicd/test $ ./test_nostatus_good.sh
-
-...
-
-Running scanner without GitHub status report
-Scanning container image: containerscan-cicd-test:latest
-
-
-SUCCESS : No issue(s) reported with the Image.
-
-```
--->
+<details>
+  <summary>Expand Integration Test Results.</summary>
 
 ```bash
 
 ```
 
-#### No status (Bad)
-
-```bash
-
-```
-
-### No status (Error)
-
-```bash
-
-```
-
-#### No status Json (Good)
-
-```bash
-
-```
-
-#### No status Json (Bad)
-
-```bash
-
-```
-
-#### No status Json (Error)
-
-```bash
-
-```
+</details>
 
 ### Note
 

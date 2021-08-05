@@ -34,15 +34,9 @@ export AWS_DEFAULT_REGION="someregion"
 ```bash
 $ cd test # Change into test folder.
 
-./test $ cat Dockerfile # Review Dockerfile that will be tested.
-
 ./test $ okta # or whichever command you used to set AWS envs (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN)
 
-./test $ chmod +x test_ghe.sh test_ghc.sh # (Optional) Make test scripts executable. test_ghe = github enterprise, test_ghc = github cloud
-
-./test $ vim test_ghc.sh # Update required fields masked as <...>
-
-./test $ ./test_ghc.sh
+./test $ ./integration_test.sh <ENV> # ENV - local|stabledev|stableprod|v1.1.1|...
 ```
 
 4. Commit & create PR.

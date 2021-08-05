@@ -184,7 +184,7 @@ func postGitHubState(ghClient GitHubClient, state string) {
 	_, _, err := CreateRepoStatus(ghClient, state)
 
 	if err != nil {
-		printWithColor(colorRed, "Reporting "+state+" to GitHub have failed.", err)
+		printWithColor(colorRed, fmt.Sprintf("Reporting %s to GitHub have failed : %q", state, err))
 	}
 }
 
@@ -193,11 +193,7 @@ func cleanUp() {
 	err := recover()
 
 	if err != nil {
-		prettyPrint(colorRed, err, string(debug.Stack()))
-	} else {
-		if outputErr = outputResults(exitCode); outputErr != nil {
-			prettyPrint(colorRed, outputErr)
-		}
+		printWithColor(colorRed, err, string(debug.Stack()))
 	}
 
 	if statusType == STATUS_GITHUB {
@@ -215,6 +211,10 @@ func cleanUp() {
 				postGitHubState(ghClient, "failure")
 			}
 		}
+	}
+
+	if outputErr = outputResults(exitCode); outputErr != nil {
+		prettyPrint(colorRed, outputErr)
 	}
 
 	os.Exit(exitCode)
