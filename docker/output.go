@@ -73,10 +73,17 @@ func outputResults(exitCode int) error {
 			return nil
 		}
 
-		printWithColor(colorRed, "Compliance Issues:")
-		cTable.Render()
-		printWithColor(colorRed, "Vulnerabilities:")
-		vTable.Render()
+		// "Temporary" hack-fix to avoid a panic() being thrown in cleanUp();
+		// this occurs when some error occurs in main() causing this function
+		// to be called before reportToCLI()
+		if cTable != nil {
+			printWithColor(colorRed, "Compliance Issues:")
+			cTable.Render()
+		}
+		if vTable != nil {
+			printWithColor(colorRed, "Vulnerabilities:")
+			vTable.Render()
+		}
 	}
 
 	return nil
