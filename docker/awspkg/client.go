@@ -15,6 +15,7 @@ import (
 
 type AWSClient interface {
 	newSession() *session.Session
+	newSessionWithEnforcedRegion(region string) *session.Session
 	GetSecretValue(secretName string, region string) (*secretsmanager.GetSecretValueOutput, error)
 	GetCallerIdentity() (*sts.GetCallerIdentityOutput, error)
 	GetParameter(name string, region string) (*ssm.GetParameterOutput, error)
@@ -28,6 +29,13 @@ func (c *SDKAWSClient) newSession() *session.Session {
 	return sessionWrapper(getSession())
 }
 
+func (c *SDKAWSClient) newSessionWithEnforcedRegion(region string) *session.Session {
+	sess, _ := session.NewSessionWithOptions(session.Options{
+		Config:  aws.Config{Region: aws.String(region)},
+	})
+	return sess
+}
+
 func (c *SDKAWSClient) GetSecretValue(secretName string, region string) (*secretsmanager.GetSecretValueOutput, error) {
 	sess := c.newSession()
 	svc := secretsmanager.New(sess, aws.NewConfig().WithRegion(region))
@@ -38,7 +46,7 @@ func (c *SDKAWSClient) GetSecretValue(secretName string, region string) (*secret
 }
 
 func (c *SDKAWSClient) GetS3Object(bucketName string, objectName string, region string) ([]byte, error) {
-	sess := c.newSession()
+	sess := c.newSessionWithEnforcedRegion(region)
 	downloader := s3manager.NewDownloader(sess)
 	buff := &aws.WriteAtBuffer{}
 	// Write the contents of S3 Object to the file

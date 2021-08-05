@@ -21,6 +21,14 @@ func (c *MockAWSClient) newSession() *session.Session {
 	return new(session.Session)
 }
 
+func (c *MockAWSClient) newSessionWithEnforcedRegion(region string) *session.Session {
+	sess, _ := session.NewSessionWithOptions(session.Options{
+		Config:  aws.Config{Region: aws.String(region)},
+	})
+	return sess
+}
+
+
 func (c *MockAWSClient) GetCallerIdentity() (*sts.GetCallerIdentityOutput, error) {
 	var err error
 	str := "test-account"
