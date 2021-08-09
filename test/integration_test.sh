@@ -75,6 +75,22 @@ echo -e "\033[36m\n[+] Result : $?\n\033[0m"
 
 
 (( NUMBER_OF_TESTS++ ))
+echo -e "\n\n[+] ${NUMBER_OF_TESTS}. Test with AWS_DEFAULT_REGION to unsupported region\n"
+docker run \
+    --rm \
+    -u root \
+    -v /var/run/docker.sock:/var/run/docker.sock:ro \
+    -e AWS_ACCESS_KEY_ID \
+    -e AWS_SECRET_ACCESS_KEY \
+    -e AWS_SESSION_TOKEN \
+    -e AWS_DEFAULT_REGION=ap-southeast-1 \
+    -e CONTAINER=${CONTAINER_GOOD} \
+    -e SCANNER_STATUS=nostatus \
+    ${SCANNER_IMAGE}
+echo -e "\033[36m\n[+] Result : $?\n\033[0m"
+
+
+(( NUMBER_OF_TESTS++ ))
 echo -e "\n\n[+] ${NUMBER_OF_TESTS}. Test environment variable AWS_ACCESS_KEY_ID & AWS_SESSION_TOKEN are missing\n"
 docker run \
     --rm \
@@ -153,6 +169,23 @@ echo -e "\033[36m\n[+] Result : $?\n\033[0m"
 
 
 (( NUMBER_OF_TESTS++ ))
+echo -e "\n\n[+] ${NUMBER_OF_TESTS}. Test FORMAT=json with AWS_DEFAULT_REGION to unsupported region\n"
+docker run \
+    --rm \
+    -u root \
+    -v /var/run/docker.sock:/var/run/docker.sock:ro \
+    -e AWS_ACCESS_KEY_ID \
+    -e AWS_SECRET_ACCESS_KEY \
+    -e AWS_SESSION_TOKEN \
+    -e AWS_DEFAULT_REGION=ap-southeast-1 \
+    -e CONTAINER=${CONTAINER_GOOD} \
+    -e SCANNER_STATUS=nostatus \
+    -e FORMAT=json \
+    ${SCANNER_IMAGE}
+echo -e "\033[36m\n[+] Result : $?\n\033[0m"
+
+
+(( NUMBER_OF_TESTS++ ))
 echo -e "\n\n[+] ${NUMBER_OF_TESTS}. Test FORMAT=json environment variable AWS_ACCESS_KEY_ID & AWS_SESSION_TOKEN are missing\n"
 docker run \
     --rm \
@@ -216,6 +249,25 @@ docker run \
     -e AWS_SECRET_ACCESS_KEY \
     -e AWS_SESSION_TOKEN \
     -e AWS_DEFAULT_REGION \
+    -e CONTAINER=${CONTAINER_GOOD} \
+    -e TARGET_URL=${TARGET_URL} \
+    -e GITHUB_URL=${GITHUB_URL} \
+    -e GITHUB_REPO=${GITHUB_REPO} \
+    -e COMMIT_SHA=${COMMIT_SHA} \
+    -e PAT=${PAT} \
+    ${SCANNER_IMAGE}
+echo -e "\033[36m\n[+] Result : $?\n\033[0m"
+
+(( NUMBER_OF_TESTS++ ))
+echo -e "\n\n[+] ${NUMBER_OF_TESTS}. Test with AWS_DEFAULT_REGION to unsupported region\n"
+docker run \
+    --rm \
+    -u root \
+    -v /var/run/docker.sock:/var/run/docker.sock:ro \
+    -e AWS_ACCESS_KEY_ID \
+    -e AWS_SECRET_ACCESS_KEY \
+    -e AWS_SESSION_TOKEN \
+    -e AWS_DEFAULT_REGION=ap-southeast-1 \
     -e CONTAINER=${CONTAINER_GOOD} \
     -e TARGET_URL=${TARGET_URL} \
     -e GITHUB_URL=${GITHUB_URL} \
@@ -330,6 +382,26 @@ docker run \
     -e AWS_SECRET_ACCESS_KEY \
     -e AWS_SESSION_TOKEN \
     -e AWS_DEFAULT_REGION \
+    -e CONTAINER=${CONTAINER_GOOD} \
+    -e TARGET_URL=${TARGET_URL} \
+    -e GITHUB_URL=${GITHUB_URL} \
+    -e GITHUB_REPO=${GITHUB_REPO} \
+    -e COMMIT_SHA=${COMMIT_SHA} \
+    -e PAT=${PAT} \
+    -e FORMAT=json \
+    ${SCANNER_IMAGE}
+echo -e "\033[36m\n[+] Result : $?\n\033[0m"
+
+(( NUMBER_OF_TESTS++ ))
+echo -e "\n\n[+] ${NUMBER_OF_TESTS}. Test FORMAT=json with AWS_DEFAULT_REGION to unsupported region\n"
+docker run \
+    --rm \
+    -u root \
+    -v /var/run/docker.sock:/var/run/docker.sock:ro \
+    -e AWS_ACCESS_KEY_ID \
+    -e AWS_SECRET_ACCESS_KEY \
+    -e AWS_SESSION_TOKEN \
+    -e AWS_DEFAULT_REGION=ap-southeast-1 \
     -e CONTAINER=${CONTAINER_GOOD} \
     -e TARGET_URL=${TARGET_URL} \
     -e GITHUB_URL=${GITHUB_URL} \
