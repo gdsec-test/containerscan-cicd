@@ -41,10 +41,6 @@ jobs:
         run: |
           cd docker
           go get
-          export AWS_ACCESS_KEY_ID="someid"
-          export AWS_SECRET_ACCESS_KEY="somekey"
-          export AWS_SESSION_TOKEN="somesession"
-          export AWS_DEFAULT_REGION="someregion"
           go test ./... -coverprofile coverage.out -args -- -targeturl=some -githuburl=more -repo=test -commit=args -format=too -githubtoken=just -container=testing && go tool cover -func=coverage.out
       - name: Run Build
         run: |

@@ -36,6 +36,18 @@ $ cd test # Change into test folder.
 
 ./test $ okta # or whichever command you used to set AWS envs (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN)
 
+./test $ go get
+
+./test $ go test -v -failfast --scannerTag=local -timeout 20m
+```
+
+or
+
+```bash
+$ cd test # Change into test folder.
+
+./test $ okta # or whichever command you used to set AWS envs (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_SESSION_TOKEN)
+
 ./test $ ./integration_test.sh <ENV> # ENV - local|stabledev|stableprod|v1.1.1|...
 ```
 

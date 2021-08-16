@@ -6,7 +6,7 @@
 *.dll
 *.so
 *.dylib
-.DS_Store
+*.DS_Store
 # Test binary, built with `go test -c`
 *.test
 local/*
@@ -20,4 +20,7 @@ local/*
 twistcli
 .venv
 main
+
+# Custom
 test/*.json
+*.tar

@@ -36,13 +36,23 @@ jobs:
         role-duration-seconds: 3600
         aws-region: us-west-2
 
+    - name: Set up Go
+      uses: actions/setup-go@3b4dc6cbed1779f759b9c638cb83696acea809d1
+      with:
+        go-version: '1.15.6'
+
+    - name: Run scanner via Integration Test
+      run: |
+        cd test
+        go get
+        go test -v -failfast --scannerTag=local -timeout 20m
+
     - name: Check AWS Role
       run: aws sts get-caller-identity
 
     - name: Log into golden image ECR
       run: |
         aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 764525110978.dkr.ecr.us-west-2.amazonaws.com
-
     - name: Build and tag the image twistcli
       run: docker build -t ${{env.CONTAINER_IMAGE_TWISTCLI}} -t ${{github.sha}} ./docker
 
@@ -66,41 +76,4 @@ jobs:
         -e PAT=${{github.token}} \
         -e GITHUB_REPO=${{github.repository}} \
         -e COMMIT_SHA=${PR_SHA:-${{github.sha}}} \
-        ${{env.CONTAINER_IMAGE_TWISTCLI}}
-
-    - name: Build and tag good image for test scan
-      run: cd ./test && docker build -t ${{env.CONTAINER_GOOD_IMAGE_TEST}} . -f good.Dockerfile
-
-    - name: Scan good image without posting github status
-      run: |
-        docker run \
-        --rm \
-        --group-add $(stat -c '%g' /var/run/docker.sock) \
-        -v /var/run/docker.sock:/var/run/docker.sock:ro \
-        -e AWS_ACCESS_KEY_ID \
-        -e AWS_SECRET_ACCESS_KEY \
-        -e AWS_SESSION_TOKEN \
-        -e AWS_DEFAULT_REGION \
-        -e SCANNER_STATUS=nostatus \
-        -e CONTAINER=${{env.CONTAINER_GOOD_IMAGE_TEST}} \
-        ${{env.CONTAINER_IMAGE_TWISTCLI}}
-
-    - name: Scan good image with JSON output
-      run: |
-        PR_SHA=${{github.event.pull_request.head.sha}}
-        docker run \
-        --rm \
-        --group-add $(stat -c '%g' /var/run/docker.sock) \
-        -v /var/run/docker.sock:/var/run/docker.sock:ro \
-        -e AWS_ACCESS_KEY_ID \
-        -e AWS_SECRET_ACCESS_KEY \
-        -e AWS_SESSION_TOKEN \
-        -e AWS_DEFAULT_REGION \
-        -e CONTAINER=${{env.CONTAINER_GOOD_IMAGE_TEST}} \
-        -e TARGET_URL=https://github.com/${{github.repository}}/actions/runs/${{github.run_id}} \
-        -e GITHUB_URL=https://github.com/ \
-        -e PAT=${{github.token}} \
-        -e GITHUB_REPO=${{github.repository}} \
-        -e COMMIT_SHA=${PR_SHA:-${{github.sha}}} \
-        -e FORMAT=json \
         ${{env.CONTAINER_IMAGE_TWISTCLI}}

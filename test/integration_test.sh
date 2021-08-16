@@ -26,12 +26,12 @@ if [ $? -ne 0 ]; then
     exit
 fi
 
-DOCKER_SCAN_SUGGEST=false docker build -t ${CONTAINER_GOOD} . -f good.Dockerfile
+DOCKER_SCAN_SUGGEST=false docker build -t ${CONTAINER_GOOD} . -f go.good.Dockerfile
 if [ $? -ne 0 ]; then
     exit
 fi
 
-DOCKER_SCAN_SUGGEST=false docker build -t ${CONTAINER_BAD} . -f bad.go.Dockerfile
+DOCKER_SCAN_SUGGEST=false docker build -t ${CONTAINER_BAD} . -f go.bad.Dockerfile
 if [ $? -ne 0 ]; then
     exit
 fi

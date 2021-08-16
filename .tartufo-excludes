@@ -3,3 +3,5 @@ README.md
 .github/workflows
 docker/go.sum
 docker/go.mod
+test/go.sum
+test/go.mod

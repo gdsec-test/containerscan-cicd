@@ -1,4 +1,4 @@
-FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.15-alpine-3.12
+FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.16-alpine-3.14
 
 ENV CONTAINERSCAN_VERSION 1.1.8
 ENV SCAN_ENV prod
