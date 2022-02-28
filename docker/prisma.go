@@ -23,19 +23,17 @@ type API struct {
 }
 
 func formatTwistlockResult(resultstring string) ScanResult {
-	delimiter := "====DATA"
+	delimiter := "=====DATA"
 	res := resultstring[strings.Index(resultstring, delimiter)+len(delimiter):]
 
-	s := []struct {
-		EntityInfo ScanResult
-	}{}
+	s := &PrismaResult{}
 
 	if err := json.Unmarshal([]byte(res), &s); err != nil {
 		printWithColor(colorRed, "Error : Unable to unmarshal twistlock result", err)
 		panic(err)
 	}
-	
-	return s[0].EntityInfo
+
+	return s.Results[0].ScanResult
 }
 
 func createAuthTokenRequest(username string, password string) *API {

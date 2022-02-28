@@ -23,7 +23,8 @@ var overrides = []byte(`{
 
 func Test_reportToCLI(t *testing.T) {
 	containername = "226955763576.dkr.ecr.us-west-2.amazonaws.com/com.godaddy.security.tdagent:latest"
-	scanresult := `====DATA[
+	scanresult := `=====DATA{
+        "results":[
     {
         "entityInfo": {
             "_id": "sha256:8c1c64b494fa20541be87a87d23c67c17684501c62e0684cd663c138c38cba3f",
@@ -106,7 +107,8 @@ func Test_reportToCLI(t *testing.T) {
             "version": "20.12.541"
         }
     }
-]
+ ]
+}
 	`
 
 	formatedResult := formatTwistlockResult(scanresult)
@@ -122,7 +124,8 @@ func Test_reportToCLI(t *testing.T) {
 
 func Test_reportToCLI_block(t *testing.T) {
 	containername = "226955763576.dkr.ecr.us-west-2.amazonaws.com/com.godaddy.security.tdagent:latest"
-	scanresult := `====DATA[
+	scanresult := `=====DATA{
+        "results":[
     {
         "entityInfo": {
             "_id": "sha256:8c1c64b494fa20541be87a87d23c67c17684501c62e0684cd663c138c38cba3f",
@@ -207,7 +210,8 @@ func Test_reportToCLI_block(t *testing.T) {
             "version": "20.12.541"
         }
     }
-]
+ ]
+}
 	`
 
 	formatedResult := formatTwistlockResult(scanresult)
@@ -226,7 +230,8 @@ func Test_reportToCLI_block(t *testing.T) {
 
 func Test_reportToCLI_With_JSON_Format_block(t *testing.T) {
 	containername = "226955763576.dkr.ecr.us-west-2.amazonaws.com/com.godaddy.security.tdagent:latest"
-	scanresult := `====DATA[
+	scanresult := `=====DATA{
+    "results":[
     {
         "entityInfo": {
             "_id": "sha256:8c1c64b494fa20541be87a87d23c67c17684501c62e0684cd663c138c38cba3f",
@@ -311,7 +316,8 @@ func Test_reportToCLI_With_JSON_Format_block(t *testing.T) {
             "version": "20.12.541"
         }
     }
-]
+ ]
+}
 	`
 
 	formatedResult := formatTwistlockResult(scanresult)
@@ -330,7 +336,8 @@ func Test_reportToCLI_With_JSON_Format_block(t *testing.T) {
 
 func Test_reportToCLI_no_finding(t *testing.T) {
 	containername = "226955763576.dkr.ecr.us-west-2.amazonaws.com/com.godaddy.security.tdagent:latest"
-	scanresult := `====DATA[
+	scanresult := `=====DATA{
+    "results":[
     {
         "entityInfo": {
             "_id": "sha256:8c1c64b494fa20541be87a87d23c67c17684501c62e0684cd663c138c38cba3f",
@@ -349,7 +356,8 @@ func Test_reportToCLI_no_finding(t *testing.T) {
             "version": "20.12.541"
         }
     }
-]
+  ]
+}
 	`
 
 	formatedResult := formatTwistlockResult(scanresult)

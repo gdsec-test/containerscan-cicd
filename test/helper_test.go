@@ -36,6 +36,7 @@ type JSONOutput struct {
 
 func convertJSON(output string) JSONOutput {
 	var res JSONOutput
+
 	err := json.Unmarshal([]byte(output), &res)
 	if err != nil {
 		log.Fatal(err)

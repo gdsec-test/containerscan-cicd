@@ -44,7 +44,8 @@ func Test_getPrismaKeys(t *testing.T) {
 
 func Test_formatTwistlockResult(t *testing.T) {
 
-	result := `====DATA[
+	result := `=====DATA{
+    "results":[
     {
         "entityInfo": {
             "_id": "sha256:random-id",
@@ -148,6 +149,7 @@ func Test_formatTwistlockResult(t *testing.T) {
         }
     }
 ]
+}
 `
 
 	formatedResult := formatTwistlockResult(result)
@@ -159,7 +161,7 @@ func Test_formatTwistlockResult(t *testing.T) {
 
 func Test_formatTwistlockResult_panic(t *testing.T) {
 
-	result := "====DATAabc{}"
+	result := "=====DATAabc{}"
 	assert.Panics(t, func() { formatTwistlockResult(result) }, "Didn't panic reading from invalid prisma result")
 
 }

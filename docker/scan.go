@@ -32,6 +32,12 @@ type ScanResult struct {
 	Vulnerabilities
 }
 
+type PrismaResult struct {
+	Results []struct {
+		ScanResult `json:"entityInfo"`
+	} `json:"results"`
+}
+
 //ComplianceIssues List of compliance findinds
 type ComplianceIssues []map[string]interface{}
 

@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var scanresult = `====DATA[
-{
+var scanresult = `=====DATA{
+  "results":[{
     "entityInfo": {
         "_id": "sha256:randomid",
         "type": "ciImage",
@@ -109,8 +109,9 @@ var scanresult = `====DATA[
         "pass": true,
         "version": "20.12.541"
     }
+  }
+ ]
 }
-]
 `
 
 func Test_Normalize_withoutMatch(t *testing.T) {
@@ -276,7 +277,7 @@ func Test_apply_nomatch_2(t *testing.T) {
 func Test_apply_no_overrides(t *testing.T) {
 
 	overrides := []byte(`{
-    "rule_list": [  
+    "rule_list": [
       ]
   }`)
 
