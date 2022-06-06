@@ -39,7 +39,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@3b4dc6cbed1779f759b9c638cb83696acea809d1
       with:
-        go-version: '1.15.6'
+        go-version: '1.18'
 
     - name: Run scanner via Integration Test
       run: |

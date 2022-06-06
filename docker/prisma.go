@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -23,6 +24,10 @@ type API struct {
 }
 
 func formatTwistlockResult(resultstring string) ScanResult {
+	if os.Getenv("DEBUG_STDERR") == "1" {
+		os.Stderr.WriteString(resultstring)
+	}
+
 	delimiter := "=====DATA"
 	res := resultstring[strings.Index(resultstring, delimiter)+len(delimiter):]
 
