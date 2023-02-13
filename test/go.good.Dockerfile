@@ -1,4 +1,4 @@
-FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.17-alpine-3.14
+FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.19.4-alpine-3.16
 
 
 WORKDIR /home

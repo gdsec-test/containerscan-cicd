@@ -3,7 +3,7 @@ repos:
     rev: v3.4.0
     hooks:
       - id: trailing-whitespace
-        args: [ --markdown-linebreak-ext=md ]
+        args: [--markdown-linebreak-ext=md]
       - id: end-of-file-fixer
       - id: check-json
       - id: check-xml
@@ -16,6 +16,6 @@ repos:
       - id: check-merge-conflict
       - id: fix-byte-order-marker
   - repo: https://github.com/godaddy/tartufo
-    rev: v2.4.0
+    rev: 540d9b2a184db4e6c2e273973ecacbbf40f593d4 # frozen: v4.0.0
     hooks:
       - id: tartufo

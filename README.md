@@ -65,6 +65,31 @@ $ cd test # Change into test folder.
    you should go to `.varenv` file and make `stable<env>` be equal to current version in `CONTAINERSCAN_VERSION`
    In this case image will be taggedf as `stable<env>` in Golden images ECR
 
+## Greenkeeping
+
+### ⚠️ Must do:
+
+1. Run integration [test](./test/)
+2. Update containerscan-cicd image tag version.
+   - [.varenv](./.varenv)
+   - [docker/Dockerfile](./docker/Dockerfile)
+
+### Upgrade Go Version
+
+```bash
+go mod edit -go=<go_version> && go mod tidy
+```
+
+### Upgrade Base Image version
+
+See [docker/Dockerfile](./docker/Dockerfile)
+
+### Upgrade Dependency Versions
+
+```bash
+go get -u && go mod tidy
+```
+
 ## CICD
 
 Self-hosted VM for Github Actions

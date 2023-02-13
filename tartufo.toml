@@ -1,9 +1,17 @@
 [tool.tartufo]
 repo-path = "."
-exclude-paths = ".tartufo-excludes"
-exclude-signatures = [
-    "345da7487a9ab2ef4bba2920d0f3056b027040c25a2a4a29d3a77138a1803fc2",
-    "3e7c296987d278a830126ac54d422b836661ec54acaef9d965effa55efffe528",
-    "6ebebc871e7dfc3a6195d46de266cd211106165640024a9d7dd8d954eb2865a4",
-    "08dca9e22e0d613730b2fbb6b9c66c028f258ec69ef8e1131c536771246f0365"
+
+exclude-path-patterns = [
+    { path-pattern='.*/go\.(sum)', reason='Go dependency files' },
+    { path-pattern='tartufo\.toml', reason='Tartufo file' },
+]
+
+exclude-entropy-patterns = [
+    { path-pattern='.github/workflows/.*\.ya?ml', pattern='uses: .*@[a-f\d]{40}', reason='GitHub Action uses Hash' },
+    { path-pattern='docker/.*_test\.go', pattern='sha256:[a-f\d]{64}', reason='Test docker Image SHA, not sensitive' },
+    { path-pattern='docker/normalize\.go', pattern='exceptions/[a-f\d]{40}', reason='Exception ID MD5 Hash, not sensitive' },
+    { path-pattern='README\.md', pattern='https://cloud.int.godaddy.com/compute/vms.*', reason='Openstack URL, not sensitive' },
+    { path-pattern='test/integration_test\.sh', pattern='AWS_DEFAULT_REGION=[a-z-\d]*', match-type='match', scope='word', reason='AWS Region' },
+    { path-pattern='test/.*_test\.go', pattern='Test[a-zA-Z\d_]*', match-type='match', scope='word', reason='Test Names' },
+    { path-pattern='\.pre-commit-config\.yaml', pattern='rev: [a-f\d]{40}', reason='Release MD5 hash, not sensitive' },
 ]

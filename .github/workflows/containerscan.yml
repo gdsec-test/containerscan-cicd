@@ -2,15 +2,9 @@ on:
   push:
     branches:
       - "main"
-    paths-ignore:
-      - "sceptre/**"
-      - ".github/workflows/sceptre.yml"
 
   pull_request:
     branches: [main]
-    paths-ignore:
-      - "sceptre/**"
-      - ".github/workflows/sceptre.yml"
 
 name: scan container images
 env:
@@ -21,59 +15,58 @@ env:
 jobs:
   build-and-scan:
     name: Build and Scan for Vulnerabilities
-    runs-on: self-hosted
+    runs-on: [self-hosted, product-security, non-pci, deploy]
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+      - name: Checkout
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
 
-    - name: Configure AWS credentials using Cloud Key Based Service Accounts
-      uses: aws-actions/configure-aws-credentials@1ed6eed14f0f832cad5830fb357d937c2f20ec67
-      with:
-        aws-access-key-id: ${{ secrets.DEV_PRIVATE_AWS_SECRET_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.DEV_PRIVATE_AWS_SECRET_TOKEN_VALUE }}
-        role-to-assume: ${{ secrets.DEV_PRIVATE_AWS_DEPLOY_ROLE }}
-        role-duration-seconds: 3600
-        aws-region: us-west-2
+      - name: Configure AWS credentials using Cloud Key Based Service Accounts
+        uses: aws-actions/configure-aws-credentials@1417e62aeacec5e7fbe447bb7712d50847507342
+        with:
+          role-to-assume: ${{ secrets.DEV_PRIVATE_AWS_DEPLOY_ROLE_ARN }}
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+          aws-region: us-west-2
 
-    - name: Set up Go
-      uses: actions/setup-go@3b4dc6cbed1779f759b9c638cb83696acea809d1
-      with:
-        go-version: '1.18'
+      - name: Set up Go
+        uses: actions/setup-go@3b4dc6cbed1779f759b9c638cb83696acea809d1
+        with:
+          go-version: "1.19"
 
-    - name: Run scanner via Integration Test
-      run: |
-        cd test
-        go get
-        go test -v -failfast --scannerTag=local -timeout 20m
+      - name: Check AWS Role
+        run: aws sts get-caller-identity
 
-    - name: Check AWS Role
-      run: aws sts get-caller-identity
+      - name: Run scanner via Integration Test
+        run: |
+          cd test
+          go get
+          go test -v -failfast --scannerTag=local -timeout 20m
 
-    - name: Log into golden image ECR
-      run: |
-        aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 764525110978.dkr.ecr.us-west-2.amazonaws.com
-    - name: Build and tag the image twistcli
-      run: docker build -t ${{env.CONTAINER_IMAGE_TWISTCLI}} -t ${{github.sha}} ./docker
+      - name: Log into golden image ECR
+        run: |
+          aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 764525110978.dkr.ecr.us-west-2.amazonaws.com
+      - name: Build and tag the image twistcli
+        run: docker build -t ${{env.CONTAINER_IMAGE_TWISTCLI}} -t ${{github.sha}} ./docker
 
-    - name: Build and tag the image for test scan
-      run: docker build -t ${{env.CONTAINER_IMAGE_TEST}} ./docker
+      - name: Build and tag the image for test scan
+        run: docker build -t ${{env.CONTAINER_IMAGE_TEST}} ./docker
 
-    - name: Scan self image
-      run: |
-        PR_SHA=${{github.event.pull_request.head.sha}}
-        docker run \
-        --rm \
-        --group-add $(stat -c '%g' /var/run/docker.sock) \
-        -v /var/run/docker.sock:/var/run/docker.sock:ro \
-        -e AWS_ACCESS_KEY_ID \
-        -e AWS_SECRET_ACCESS_KEY \
-        -e AWS_SESSION_TOKEN \
-        -e AWS_DEFAULT_REGION \
-        -e TARGET_URL=https://github.com/${{github.repository}}/actions/runs/${{github.run_id}} \
-        -e GITHUB_URL=https://github.com/ \
-        -e CONTAINER=${{env.CONTAINER_IMAGE_TEST}} \
-        -e PAT=${{github.token}} \
-        -e GITHUB_REPO=${{github.repository}} \
-        -e COMMIT_SHA=${PR_SHA:-${{github.sha}}} \
-        ${{env.CONTAINER_IMAGE_TWISTCLI}}
+      - name: Scan self image
+        run: |
+          PR_SHA=${{github.event.pull_request.head.sha}}
+          docker run \
+          --rm \
+          --group-add $(stat -c '%g' /var/run/docker.sock) \
+          -v /var/run/docker.sock:/var/run/docker.sock:ro \
+          -e AWS_ACCESS_KEY_ID \
+          -e AWS_SECRET_ACCESS_KEY \
+          -e AWS_SESSION_TOKEN \
+          -e AWS_DEFAULT_REGION \
+          -e TARGET_URL=https://github.com/${{github.repository}}/actions/runs/${{github.run_id}} \
+          -e GITHUB_URL=https://github.com/ \
+          -e CONTAINER=${{env.CONTAINER_IMAGE_TEST}} \
+          -e PAT=${{github.token}} \
+          -e GITHUB_REPO=${{github.repository}} \
+          -e COMMIT_SHA=${PR_SHA:-${{github.sha}}} \
+          ${{env.CONTAINER_IMAGE_TWISTCLI}}
