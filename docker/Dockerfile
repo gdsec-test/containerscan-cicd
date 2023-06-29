@@ -1,7 +1,7 @@
-FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.19-alpine-3.16
+FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.20-alpine-3.18
 
-ENV CONTAINERSCAN_VERSION 1.2.0
-ENV SCAN_ENV prod
+ENV CONTAINERSCAN_VERSION 1.3.0
+ENV SCAN_ENV dev
 
 USER root
 
@@ -18,7 +18,7 @@ ADD . /app
 WORKDIR /app
 ## we run go build to compile the binary
 ## executable of our Go program
-RUN go build -o main .
+RUN go build -o main . 
 ## Our start command which kicks off
 ## our newly created binary executable
 

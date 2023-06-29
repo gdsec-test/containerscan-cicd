@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -107,9 +108,14 @@ func (api *API) getAPIResponse() []byte {
 }
 
 func downloadTwistCli(token string) []byte {
+	arch := runtime.GOARCH
+	endpoint := "/api/v1/util/twistcli"
+	if arch == "arm64" {
+		endpoint = "/api/v1/util/arm64/twistcli"
+	}
 	api := API{
 		Client:    &http.Client{},
-		url:       prismaConsoleURL + "/api/v1/util/twistcli",
+		url:       prismaConsoleURL + endpoint,
 		authToken: token,
 		method:    "GET",
 		payload:   nil,
