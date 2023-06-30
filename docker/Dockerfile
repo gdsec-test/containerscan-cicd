@@ -1,7 +1,7 @@
 FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.20-alpine-3.18
 
 ENV CONTAINERSCAN_VERSION 1.3.0
-ENV SCAN_ENV dev
+ENV SCAN_ENV prod
 
 USER root
 
