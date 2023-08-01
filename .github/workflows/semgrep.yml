@@ -2,14 +2,14 @@ name: semgrep
 
 on:
   push:
-    branches: [ * ]
+    branches: [ test,main ]
   pull_request:
-    branches: [ * ]
+    branches: [ test,main ]
 
 jobs:
   secuirycheck:
     name: upload semgrep scanning result
-    runs-on: ubuntu-latest
+    runs-on: [non-pci,global-security]
     permissions: write-all
     steps:
       - name: Checkout code
