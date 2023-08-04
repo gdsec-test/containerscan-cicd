@@ -37,7 +37,7 @@ func Test_parseAndCheckArgs(t *testing.T) {
 	}
 	result = parseAndCheckArgs()
 	if result == false {
-		t.Error("Arguments validation should not have succeeded")
+		t.Error("Arguments validation should have succeeded")
 	}
 
 	os.Args = []string{os.Args[0],
@@ -48,7 +48,7 @@ func Test_parseAndCheckArgs(t *testing.T) {
 	}
 
 	result = parseAndCheckArgs()
-	if result == false {
+	if result == true {
 		t.Error("Arguments validation should not have succeeded")
 	}
 
