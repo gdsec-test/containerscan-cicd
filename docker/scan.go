@@ -26,7 +26,7 @@ const (
 	OUTPUT_JSON  = iota
 )
 
-//ScanResult scan result with compliance and vulnerability findinds
+// ScanResult scan result with compliance and vulnerability findinds
 type ScanResult struct {
 	ComplianceIssues
 	Vulnerabilities
@@ -38,10 +38,10 @@ type PrismaResult struct {
 	} `json:"results"`
 }
 
-//ComplianceIssues List of compliance findinds
+// ComplianceIssues List of compliance findinds
 type ComplianceIssues []map[string]interface{}
 
-//Vulnerabilities List of vulnerability findinds
+// Vulnerabilities List of vulnerability findinds
 type Vulnerabilities []map[string]interface{}
 
 var (
@@ -162,6 +162,14 @@ func main() {
 	}
 
 	printWithColor(colorGreen, "Scanning container image: "+containername+"\n")
+
+	containername = strings.ReplaceAll(containername, " ", "")
+
+	if strings.ContainsAny(containername, "&|;$><`\\!") {
+		printWithColor(colorRed, "FATAL: bad container name")
+		exitCode = EXIT_BAD_ARG
+		return
+	}
 
 	if !strings.Contains(containername, ":") {
 		containername += ":latest"
