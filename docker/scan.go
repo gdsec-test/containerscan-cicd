@@ -148,6 +148,11 @@ func parseAndCheckArgs() bool {
 		printWithColor(colorYellow, "Running scanner without GitHub status report")
 	}
 
+	if strings.ContainsAny(containername, "&|;$><`\\!") {
+		printWithColor(colorRed, "FATAL: bad container name")
+		checksPass = false
+	}
+
 	return checksPass
 }
 
@@ -164,12 +169,6 @@ func main() {
 	printWithColor(colorGreen, "Scanning container image: "+containername+"\n")
 
 	containername = strings.ReplaceAll(containername, " ", "")
-
-	if strings.ContainsAny(containername, "&|;$><`\\!") {
-		printWithColor(colorRed, "FATAL: bad container name")
-		exitCode = EXIT_BAD_ARG
-		return
-	}
 
 	if !strings.Contains(containername, ":") {
 		containername += ":latest"

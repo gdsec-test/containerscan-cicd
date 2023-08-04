@@ -39,4 +39,17 @@ func Test_parseAndCheckArgs(t *testing.T) {
 	if result == false {
 		t.Error("Arguments validation should not have succeeded")
 	}
+
+	os.Args = []string{os.Args[0],
+		"--status=nostatus",
+		"--repo=nonexistentrepositoryowner/nonexistentrepositoryrepository",
+		"--format=table",
+		"--container=aaa;ls -la",
+	}
+
+	result = parseAndCheckArgs()
+	if result == false {
+		t.Error("Arguments validation should not have succeeded")
+	}
+
 }
