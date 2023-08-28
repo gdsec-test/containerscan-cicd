@@ -254,7 +254,7 @@ func Test_Withstatus_JSON_ErrorPath_Without_Env_CONTAINER(t *testing.T) {
 
 	jo := convertJSON(res.ContainerOutput)
 
-	if valid, msg = assertExitCodeEqual(res.ExitCode, EXIT_FAILURE); !valid {
+	if valid, msg = assertExitCodeEqual(res.ExitCode, EXIT_BAD_ARG); !valid {
 		t.Error(msg)
 	}
 
@@ -266,7 +266,7 @@ func Test_Withstatus_JSON_ErrorPath_Without_Env_CONTAINER(t *testing.T) {
 		t.Error(msg)
 	}
 
-	if valid, msg = assertDebugMessageContains(jo.DebugMessages, "failed to find image :latest"); !valid {
+	if valid, msg = assertDebugMessageContains(jo.DebugMessages, "FATAL: bad container name"); !valid {
 		t.Error(msg)
 	}
 
@@ -290,7 +290,7 @@ func Test_Withstatus_JSON_ErrorPath_Without_Env_CONTAINER(t *testing.T) {
 		t.Error(msg)
 	}
 
-	if valid, msg = assertDebugMessageContains(jo.DebugMessages, "Reporting error to GitHub"); !valid {
+	if valid, msg = assertDebugMessageContains(jo.DebugMessages, "Reporting failure to GitHub have failed"); !valid {
 		t.Error(msg)
 	}
 

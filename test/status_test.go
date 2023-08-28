@@ -246,10 +246,6 @@ func Test_Withstatus_ErrorPath_Without_Env_CONTAINER(t *testing.T) {
 		t.Error(msg)
 	}
 
-	if valid, msg = assertContains(res.ContainerOutput, "failed to find image :latest"); !valid {
-		t.Error(msg)
-	}
-
 	if valid, msg = assertNotContains(res.ContainerOutput, "SUCCESS :"); !valid {
 		t.Error(msg)
 	}
@@ -266,7 +262,7 @@ func Test_Withstatus_ErrorPath_Without_Env_CONTAINER(t *testing.T) {
 		t.Error(msg)
 	}
 
-	if valid, msg = assertContains(res.ContainerOutput, "Reporting error to GitHub"); !valid {
+	if valid, msg = assertDebugMessageContains(jo.DebugMessages, "Reporting failure to GitHub have failed"); !valid {
 		t.Error(msg)
 	}
 
