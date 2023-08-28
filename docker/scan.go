@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"regexp"
 	"runtime/debug"
 	"strings"
 
@@ -148,8 +149,9 @@ func parseAndCheckArgs() bool {
 		printWithColor(colorYellow, "Running scanner without GitHub status report")
 	}
 
-	if strings.ContainsAny(containername, "&|;$><`\\!") {
-		printWithColor(colorRed, "FATAL: bad container name")
+	containernameCompliant, err := regexp.MatchString("^((?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])(?:(?:\\.(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]))+)?(?::[0-9]+)?/)?[a-z0-9]+(?:(?:(?:[._]|__|[-]*)[a-z0-9]+)+)?(?:(?:/[a-z0-9]+(?:(?:(?:[._]|__|[-]*)[a-z0-9]+)+)?)+)?)(?::([\\w][\\w.-]{0,127}))?(?:@([A-Za-z][A-Za-z0-9]*(?:[-_+.][A-Za-z][A-Za-z0-9]*)*[:][[:xdigit:]]{32,}))?$", containername)
+	if err != nil || !containernameCompliant {
+		printWithColor(colorRed, "FATAL: bad container name.", err)
 		checksPass = false
 	}
 
