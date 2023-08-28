@@ -23,8 +23,8 @@ func Test_parseAndCheckArgs(t *testing.T) {
 
 	os.Args = []string{os.Args[0], "--status=nostatus", "--format=anotherfakeoption"}
 	result = parseAndCheckArgs()
-	if result == false {
-		t.Error("Arguments validation should not have failed")
+	if result == true {
+		t.Error("Arguments validation should have failed")
 	}
 
 	os.Args = []string{os.Args[0],
@@ -36,8 +36,8 @@ func Test_parseAndCheckArgs(t *testing.T) {
 		"--format=table",
 	}
 	result = parseAndCheckArgs()
-	if result == false {
-		t.Error("Arguments validation should have succeeded")
+	if result == true {
+		t.Error("Arguments validation should not have succeeded")
 	}
 
 	os.Args = []string{os.Args[0],
