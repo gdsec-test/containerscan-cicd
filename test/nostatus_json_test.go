@@ -194,7 +194,7 @@ func Test_nostatus_JSON_ErrorPath_Without_Env_CONTAINER(t *testing.T) {
 
 	jo := convertJSON(res.ContainerOutput)
 
-	if valid, msg = assertExitCodeEqual(res.ExitCode, EXIT_FAILURE); !valid {
+	if valid, msg = assertExitCodeEqual(res.ExitCode, EXIT_BAD_ARG); !valid {
 		t.Error(msg)
 	}
 

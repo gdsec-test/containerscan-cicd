@@ -178,7 +178,7 @@ func Test_nostatus_ErrorPath_Without_Env_CONTAINER(t *testing.T) {
 
 	t.Logf("\n%s", res.ContainerOutput)
 
-	if valid, msg = assertExitCodeEqual(res.ExitCode, EXIT_FAILURE); !valid {
+	if valid, msg = assertExitCodeEqual(res.ExitCode, EXIT_BAD_ARG); !valid {
 		t.Error(msg)
 	}
 
