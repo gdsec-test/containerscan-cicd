@@ -238,7 +238,7 @@ func Test_Withstatus_ErrorPath_Without_Env_CONTAINER(t *testing.T) {
 
 	t.Logf("\n%s", res.ContainerOutput)
 
-	if valid, msg = assertExitCodeEqual(res.ExitCode, EXIT_FAILURE); !valid {
+	if valid, msg = assertExitCodeEqual(res.ExitCode, EXIT_BAD_ARG); !valid {
 		t.Error(msg)
 	}
 
@@ -262,7 +262,7 @@ func Test_Withstatus_ErrorPath_Without_Env_CONTAINER(t *testing.T) {
 		t.Error(msg)
 	}
 
-	if valid, msg = assertDebugMessageContains(res.DebugMessages, "Reporting failure to GitHub have failed"); !valid {
+	if valid, msg = assertContains(res.ContainerOutput, "Reporting failure to GitHub have failed"); !valid {
 		t.Error(msg)
 	}
 
