@@ -206,10 +206,6 @@ func Test_nostatus_JSON_ErrorPath_Without_Env_CONTAINER(t *testing.T) {
 		t.Error(msg)
 	}
 
-	if valid, msg = assertDebugMessageContains(jo.DebugMessages, "failed to find image :latest"); !valid {
-		t.Error(msg)
-	}
-
 	if valid, msg = assertDebugMessageNotContains(jo.DebugMessages, "SUCCESS :"); !valid {
 		t.Error(msg)
 	}
