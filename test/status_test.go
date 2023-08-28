@@ -262,7 +262,7 @@ func Test_Withstatus_ErrorPath_Without_Env_CONTAINER(t *testing.T) {
 		t.Error(msg)
 	}
 
-	if valid, msg = assertDebugMessageContains(jo.DebugMessages, "Reporting failure to GitHub have failed"); !valid {
+	if valid, msg = assertDebugMessageContains(res.DebugMessages, "Reporting failure to GitHub have failed"); !valid {
 		t.Error(msg)
 	}
 
