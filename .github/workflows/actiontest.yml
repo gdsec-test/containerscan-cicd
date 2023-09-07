@@ -3,7 +3,7 @@ name: Scan no findings
 on:
   push:
     branches:
-      - "actiontest"  
+      - "feature/actiontest"  
 
 jobs:
   deploy:
