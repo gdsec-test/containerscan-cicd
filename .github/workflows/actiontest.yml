@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f      
-        
+
       - name: Check AWS Role
         run: aws sts get-caller-identity     
 
@@ -67,5 +67,5 @@ jobs:
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ env.AWS_SESSION_TOKEN }}
           aws-default-region: us-west-2
-          aws-region: us-west-2
+          architecture: 'x86'
           
