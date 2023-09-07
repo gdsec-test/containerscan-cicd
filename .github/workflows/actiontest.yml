@@ -11,6 +11,7 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+      
       - name: Get GitHub Credentials
         id: gh-creds
         run: |
@@ -23,6 +24,14 @@ jobs:
           GITHUB_USERNAME="$(aws --region us-west-2 secretsmanager get-secret-value --secret-id "${GIT_SECRET_ARN}" | jq '.SecretString | fromjson | .username')"
           echo "::add-mask::${GITHUB_USERNAME}"
           echo "GITHUB_USERNAME=${GITHUB_USERNAME}" >> $GITHUB_OUTPUT
+
+      - name: Switch to LoB Account Deploy Role
+        uses: aws-actions/configure-aws-credentials@1417e62aeacec5e7fbe447bb7712d50847507342
+        with:
+          aws-region: us-west-2
+          role-to-assume: ${{ secrets.DEV_PRIVATE_AWS_DEPLOY_ROLE_ARN }}
+          role-skip-session-tagging: true
+          role-duration-seconds: 7200
 
       - name: Check AWS Role
         run: aws sts get-caller-identity     
