@@ -10,8 +10,20 @@ jobs:
     runs-on: [self-hosted, product-security, non-pci, deploy]
     steps:
       - name: Check out repository
-        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f      
+
+      - name: Switch to LoB Account Deploy Role
+        uses: aws-actions/configure-aws-credentials@1417e62aeacec5e7fbe447bb7712d50847507342
+        with:
+          aws-region: us-west-2
+          role-to-assume: ${{ secrets.DEV_PRIVATE_AWS_DEPLOY_ROLE_ARN }}
+          role-skip-session-tagging: true
+          role-duration-seconds: 7200
       
+      - name: Check AWS Role
+        run: aws sts get-caller-identity     
+
+
       - name: Get GitHub Credentials
         id: gh-creds
         run: |
@@ -25,18 +37,7 @@ jobs:
           echo "::add-mask::${GITHUB_USERNAME}"
           echo "GITHUB_USERNAME=${GITHUB_USERNAME}" >> $GITHUB_OUTPUT
 
-      - name: Switch to LoB Account Deploy Role
-        uses: aws-actions/configure-aws-credentials@1417e62aeacec5e7fbe447bb7712d50847507342
-        with:
-          aws-region: us-west-2
-          role-to-assume: ${{ secrets.DEV_PRIVATE_AWS_DEPLOY_ROLE_ARN }}
-          role-skip-session-tagging: true
-          role-duration-seconds: 7200
-
-      - name: Check AWS Role
-        run: aws sts get-caller-identity     
-
-
+      
       - name: Log into golden image ECR
         run: |
           aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 764525110978.dkr.ecr.us-west-2.amazonaws.com
