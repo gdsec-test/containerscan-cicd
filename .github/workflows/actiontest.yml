@@ -1,0 +1,69 @@
+name: Scan no findings
+
+on:
+  push:
+    branches:
+      - "actiontest"  
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, product-security, non-pci, deploy]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+      - name: Get GitHub Credentials
+        id: gh-creds
+        run: |
+          GIT_SECRET_ARN="$(aws --region us-west-2 secretsmanager describe-secret --secret-id '${{ secrets.GIT_SECRET_ID }}' | jq --raw-output '.ARN')"
+          echo "::add-mask::${GIT_SECRET_ARN}"
+          GITHUB_PAT="$(aws --region us-west-2 secretsmanager get-secret-value --secret-id "${GIT_SECRET_ARN}" | jq --raw-output '.SecretString | fromjson | .PAT')"
+          echo "::add-mask::${GITHUB_PAT}"
+          echo "GITHUB_PAT=${GITHUB_PAT}" >> $GITHUB_OUTPUT
+
+          GITHUB_USERNAME="$(aws --region us-west-2 secretsmanager get-secret-value --secret-id "${GIT_SECRET_ARN}" | jq '.SecretString | fromjson | .username')"
+          echo "::add-mask::${GITHUB_USERNAME}"
+          echo "GITHUB_USERNAME=${GITHUB_USERNAME}" >> $GITHUB_OUTPUT
+
+      - name: Check AWS Role
+        run: aws sts get-caller-identity     
+
+
+      - name: Log into golden image ECR
+        run: |
+          aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 764525110978.dkr.ecr.us-west-2.amazonaws.com
+
+      - name: pull base image
+        run: |
+          docker pull 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.20-alpine-3.18
+
+      - name: Build and Deploy image as <commit hash>
+        working-directory: docker
+        env:
+          ECR_REGISTRY: 226955763576.dkr.ecr.us-west-2.amazonaws.com
+          ECR_REPOSITORY: containerscan_forgithubaction
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+
+      - name: Checkout GitHub Action for Scan Image
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        with:
+           repository: gdcorp-actions/container-scan
+           ref: main
+           token: ${{ steps.gh-creds.outputs.GITHUB_PAT }}
+           path: .github/actions/container-scan
+
+      - name: Scan Images For Vulnerabilities
+        env:
+          ECR_REGISTRY: 226955763576.dkr.ecr.us-west-2.amazonaws.com
+          ECR_REPOSITORY: containerscan_forgithubaction
+          IMAGE_TAG: latest
+        id: container_scan
+        uses: ./.github/actions/container-scan
+        with:
+          container-name: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG  # this is set in the build stage of each container's Makefile
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ env.AWS_SESSION_TOKEN }}
+          aws-default-region: ${{ inputs.aws_region }}
+          
