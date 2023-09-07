@@ -11,15 +11,7 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f      
-
-      # - name: Switch to LoB Account Deploy Role
-      #   uses: aws-actions/configure-aws-credentials@1417e62aeacec5e7fbe447bb7712d50847507342
-      #   with:
-      #     aws-region: us-west-2
-      #     role-to-assume: ${{ secrets.DEV_PRIVATE_AWS_DEPLOY_ROLE_ARN }}
-      #     role-skip-session-tagging: true
-      #     role-duration-seconds: 7200
-      
+        
       - name: Check AWS Role
         run: aws sts get-caller-identity     
 
@@ -74,5 +66,6 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ env.AWS_SESSION_TOKEN }}
-          aws-default-region: ${{ inputs.aws_region }}
+          aws-default-region: us-west-2
+          aws-region: us-west-2
           
