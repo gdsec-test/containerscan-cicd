@@ -18,13 +18,13 @@ ADD . /build
 ## we run go build to compile the binary
 ## executable of our Go program
 RUN rm /usr/local/go/src/crypto/tls/testdata/example-key.pem && \
-    go build -trimpath -ldflags "-s -w" -o main . && \
-    chmod -R a+rwxX /build
+    go build -trimpath -ldflags "-s -w" -o main .
 
 FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine:3.18
 WORKDIR /app
 COPY --from=build /build/main /app/main
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+RUN chmod -R a+rwxX /app
 USER worker
 ## Our start command which kicks off
 ## our newly created binary executable
