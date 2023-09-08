@@ -1,4 +1,4 @@
-FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.21-alpine-3.18 as build
+FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine-golang:1.20-alpine-3.18 as build
 
 ENV CONTAINERSCAN_VERSION 1.3.0
 ENV SCAN_ENV prod
@@ -19,15 +19,14 @@ ADD . /build
 ## executable of our Go program
 RUN rm /usr/local/go/src/crypto/tls/testdata/example-key.pem && \
     go build -trimpath -ldflags "-s -w" -o main . && \
-    chmod -R a+rwxX /build && \
-    echo "nobody:x:2000:2000:Nobody:/:" > passwd.minimal
+    chmod -R a+rwxX /build
 
 FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine:3.18
 WORKDIR /app
 COPY --from=build /build/passwd.minimal /etc/passwd
 COPY --from=build /build/main /app/main
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-USER nobody
+USER worker
 ## Our start command which kicks off
 ## our newly created binary executable
 # use ${SCANNER_STATUS:-github} ensures that if SCANNER_STATUS is not defined, it will default to "github"
