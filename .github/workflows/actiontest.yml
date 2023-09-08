@@ -67,5 +67,5 @@ jobs:
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ env.AWS_SESSION_TOKEN }}
           aws-default-region: us-west-2
-          architecture: 'x86'
+          architecture: 'arm'
           
