@@ -23,7 +23,6 @@ RUN rm /usr/local/go/src/crypto/tls/testdata/example-key.pem && \
 
 FROM 764525110978.dkr.ecr.us-west-2.amazonaws.com/alpine:3.18
 WORKDIR /app
-COPY --from=build /build/passwd.minimal /etc/passwd
 COPY --from=build /build/main /app/main
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 USER worker
