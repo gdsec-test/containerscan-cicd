@@ -68,17 +68,7 @@ func (exc *businessException) apply(finding map[string]interface{}) bool {
 	return false
 }
 func getAwsUrl(org_type string, awsaccountid string) string {
-	aws_host := ""
-
-	if org_type == "non-pci" {
-		aws_host = "api.cirrusscan.gdcorp.tools"
-	} else if org_type == "pci" {
-		aws_host = "api-p.cirrusscan.gdcorp.tools"
-	} else if org_type == "registry" {
-		aws_host = "api-r.cirrusscan.gdcorp.tools"
-	} else {
-		panic("Unrecognized organization type: " + org_type)
-	}
+	aws_host := "api.cirrusscan.gdcorp.tools"
 	url := fmt.Sprintf("https://%s/v1/exception?account=%s", aws_host, awsaccountid)
 	return url
 }

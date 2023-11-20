@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 var scanresult = `=====DATA{
@@ -368,7 +366,7 @@ func Test_getAwsUrl_pci(t *testing.T) {
 	org_type := "pci"
 	awsaccountid := "123456"
 	result := getAwsUrl(org_type, awsaccountid)
-	if result != "https://api-p.cirrusscan.gdcorp.tools/v1/exception?account=123456" {
+	if result != "https://api.cirrusscan.gdcorp.tools/v1/exception?account=123456" {
 		t.Error("Get aws url failed")
 	}
 }
@@ -376,14 +374,16 @@ func Test_getAwsUrl_registry(t *testing.T) {
 	org_type := "registry"
 	awsaccountid := "123456"
 	result := getAwsUrl(org_type, awsaccountid)
-	if result != "https://api-r.cirrusscan.gdcorp.tools/v1/exception?account=123456" {
+	if result != "https://api.cirrusscan.gdcorp.tools/v1/exception?account=123456" {
 		t.Error("Get aws url failed")
 	}
 }
 
-func Test_getAwsUrl_panic(t *testing.T) {
+func Test_getAwsUrl_unrecognized(t *testing.T) {
 	org_type := "random"
 	awsaccountid := "123456"
-
-	assert.Panics(t, func() { getAwsUrl(org_type, awsaccountid) }, "Didn't panic with bad org_type")
+	result := getAwsUrl(org_type, awsaccountid)
+	if result != "https://api.cirrusscan.gdcorp.tools/v1/exception?account=123456" {
+		t.Error("Get aws url failed")
+	}
 }
